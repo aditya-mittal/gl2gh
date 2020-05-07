@@ -1,21 +1,19 @@
 var assert = require('assert');
 var should = require('chai').should();
-var Group = require('../../../src/gitlab/group.js');
 var Project = require('../../../src/gitlab/project.js');
-var groupDetails = require('../../resources/groupDetails.json')
+
 describe('Project', function() {
-  describe('#getProjectDetail()', function() {
-    it('should return project detail with name and ssh_url', function() {
+    it('must have name and ssh_url', function() {
       //given
-      var group = new Group(groupDetails)
-      var projectList = group.getAllProjects()
-      var project = new Project(projectList[0])
+      var name = "repository-1";
+      var ssh_url_to_repo = "git@gitlab.com:FOO/repository-1.git";
       //when
-      var projectDetails = project.getProjectDetails()
+      var project = new Project(name, ssh_url_to_repo)
       //then
-      projectDetails.should.be.a('object');
-      projectDetails.should.have.property('ssh_url_to_repo')
-      projectDetails.should.have.property('name')
+      project.should.be.a('object');
+      project.should.be.instanceof(Project);
+      project.should.have.property('name')
+      project.should.have.property('ssh_url_to_repo')
+      project.should.have.all.keys('name', 'ssh_url_to_repo')
     });
-  });
 });
