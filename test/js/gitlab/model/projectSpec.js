@@ -1,6 +1,6 @@
 var assert = require('assert');
 var should = require('chai').should();
-var Project = require('../../../src/gitlab/project.js');
+var Project = require('../../../../src/gitlab/model/project.js');
 
 describe('Project', function() {
     it('must have name and ssh_url', function() {

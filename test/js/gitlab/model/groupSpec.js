@@ -1,16 +1,16 @@
 var assert = require('assert');
 var should = require('chai').should();
-var Group = require('../../../src/gitlab/group.js');
-var Project = require('../../../src/gitlab/project.js');
-var groupDetails = require('../../resources/groupDetails.json')
+var Group = require('../../../../src/gitlab/model/group.js');
+var Project = require('../../../../src/gitlab/model/project.js');
+var groupDetails = require('../../../resources/groupDetails.json')
 
 describe('Group', function() {
-  describe('#getAllProjects()', function() {
+  describe('#getProjects()', function() {
     it('should return list of all projects', function() {
       //given
       var group = new Group(groupDetails)
       //when
-      var projectList = group.getAllProjects()
+      var projectList = group.getProjects()
       //then
       projectList.should.be.an('array');
       projectList.should.have.lengthOf(3);
