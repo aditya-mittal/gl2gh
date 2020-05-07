@@ -1,0 +1,15 @@
+{
+  "name": "migrate-repo",
+  "version": "1.0.0",
+  "description": "Migrates Gitlab repo(s) to Github",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive -w"
+  },
+  "author": "aditya-mittal",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.1.2"
+  }
+}
