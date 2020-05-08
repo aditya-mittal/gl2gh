@@ -11,9 +11,11 @@ describe('Gitlab client', function() {
   var GITLAB_PRIVATE_TOKEN = "some_private_token"
   var api
   var gitlabClient = new GitlabClient(GITLAB_URL, GITLAB_PRIVATE_TOKEN)
-  describe('#getGroupDetails', function() {
+  describe('#getGroup', function() {
     beforeEach(() => {
-      api = nock('https://gitlab.com', { reqHeaders: {
+      api = nock(
+              'https://gitlab.com', {
+                reqHeaders: {
                   'Content-Type': 'application/json',
                   'Private-Token': GITLAB_PRIVATE_TOKEN
                 }
@@ -30,7 +32,7 @@ describe('Gitlab client', function() {
       var groupName = "FOO"
       api.get('/api/v4/groups/'+groupName).reply(200, groupDetails);
       //when
-      var group = await gitlabClient.getGroupDetails(groupName)
+      var group = await gitlabClient.getGroup(groupName)
       //then
       try {
         var projectList = group.getProjects()
@@ -41,7 +43,6 @@ describe('Gitlab client', function() {
         projectList[0].should.have.property('name')
         projectList[0].should.have.property('ssh_url_to_repo')
       } catch(err) {
-        assert.deepEqual(err, { 'message': `No group found with name ${groupName}` })
         return
       }
     });
@@ -49,13 +50,28 @@ describe('Gitlab client', function() {
     it('should throw error when group not found', async() => {
       //given
       var groupName = "non-existing-group"
+      api.get('/api/v4/groups/'+groupName).reply(404);
       //when
       try {
-        var group = await gitlabClient.getGroupDetails(groupName)
+        await gitlabClient.getGroup(groupName)
         // a failing assert here is a bad idea, since it would lead into the catch clause…
       } catch (err) {
         // optional, check for specific error (or error.type, error. message to contain …)
         assert.deepEqual(err, { 'message': `No group found with name ${groupName}` })
+        return  // this is important
+      }
+    });
+    it('should throw error when error obtained while fetching group', async() => {
+      //given
+      var groupName = "error"
+      api.get('/api/v4/groups/'+groupName).replyWithError('some error occurred while fetching group');
+      //when
+      try {
+        await gitlabClient.getGroup(groupName)
+        // a failing assert here is a bad idea, since it would lead into the catch clause…
+      } catch (err) {
+        // optional, check for specific error (or error.type, error. message to contain …)
+        assert.deepEqual(err, { 'message': 'Error while fetching group details' })
         return  // this is important
       }
     });

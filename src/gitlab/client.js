@@ -5,7 +5,7 @@ function GitlabClient(url, privateToken) {
   this.url = url
   this.privateToken = privateToken
 
-  this.getGroupDetails = function(groupName) {
+  this.getGroup = function(groupName) {
     var path = '/groups/' + groupName;
     var options = this._getRequestOptions('GET', path);
 
@@ -15,17 +15,23 @@ function GitlabClient(url, privateToken) {
         res.setEncoding('utf8');
         console.log(`get group details for ${groupName} returned STATUS: ${res.statusCode}`);
         res.on('data', function (chunk) {
-            data += chunk;
+          data += chunk;
         });
 
         res.on('end', () => {
-          resolve(new Group(JSON.parse(data)));
+          if(res.statusCode === 200) {
+            resolve(new Group(JSON.parse(data)));
+          } else {
+            reject({
+             'message': `No group found with name ${groupName}`
+            })
+          }
         });
       });
 
       req.on('error', error => {
         reject({
-         'message': `No group found with name ${groupName}`
+         'message': 'Error while fetching group details'
         })
       })
       req.end()
