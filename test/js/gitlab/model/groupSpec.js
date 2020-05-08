@@ -1,4 +1,3 @@
-var assert = require('assert');
 var should = require('chai').should();
 var Group = require('../../../../src/gitlab/model/group.js');
 var Project = require('../../../../src/gitlab/model/project.js');

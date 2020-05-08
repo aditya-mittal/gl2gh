@@ -9,32 +9,41 @@ var groupDetails = require('../../resources/groupDetails.json')
 describe('Gitlab client', function() {
   var GITLAB_URL = "gitlab.com"
   var GITLAB_PRIVATE_TOKEN = "some_private_token"
-
+  var api
   var gitlabClient = new GitlabClient(GITLAB_URL, GITLAB_PRIVATE_TOKEN)
   describe('#getGroupDetails', function() {
     beforeEach(() => {
-      nock('https://gitlab.com', {
-        reqHeaders: {
-          'Content-Type': 'application/json',
-          'Private-Token': GITLAB_PRIVATE_TOKEN
-        }
-      }).get('/api/v4/groups/FOO')
-      .reply(200, groupDetails);
+      api = nock('https://gitlab.com', { reqHeaders: {
+                  'Content-Type': 'application/json',
+                  'Private-Token': GITLAB_PRIVATE_TOKEN
+                }
+              }
+            )
+    });
+
+    afterEach(() => {
+      nock.cleanAll()
     });
 
     it('should return details for the group with name FOO', async() => {
       //given
       var groupName = "FOO"
+      api.get('/api/v4/groups/'+groupName).reply(200, groupDetails);
       //when
       var group = await gitlabClient.getGroupDetails(groupName)
       //then
-      var projectList = group.getProjects()
-      projectList.should.be.an('array');
-      projectList.should.have.lengthOf(3);
-      projectList[0].should.be.a('object');
-      projectList[0].should.be.instanceof(Project);
-      projectList[0].should.have.property('name')
-      projectList[0].should.have.property('ssh_url_to_repo')
+      try {
+        var projectList = group.getProjects()
+        projectList.should.be.an('array');
+        projectList.should.have.lengthOf(3);
+        projectList[0].should.be.a('object');
+        projectList[0].should.be.instanceof(Project);
+        projectList[0].should.have.property('name')
+        projectList[0].should.have.property('ssh_url_to_repo')
+      } catch(err) {
+        assert.deepEqual(err, { 'message': `No group found with name ${groupName}` })
+        return
+      }
     });
 
     it('should throw error when group not found', async() => {
@@ -49,7 +58,6 @@ describe('Gitlab client', function() {
         assert.deepEqual(err, { 'message': `No group found with name ${groupName}` })
         return  // this is important
       }
-      assert.isOk(false, 'timeOut must throw')
     });
   });
 });
