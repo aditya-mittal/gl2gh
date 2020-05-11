@@ -11,6 +11,8 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^7.1.2",
-    "nock": "^12.0.3"
+    "nock": "^12.0.3",
+    "nodegit": "^0.26.5",
+    "sinon": "^9.0.2"
   }
 }
