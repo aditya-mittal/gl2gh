@@ -15,9 +15,9 @@
     - [ ] exclude any specific project
 - [ ] create organisation on github
 - [ ] for every gitlab repo
-    - [ ] clone the repo on local & change directory to it
+    - [x] clone the repo on local & change directory to it
     - [ ] create its equivalent bare repo on github
-    - [ ] update the git-remote of gitlab repo to github
+    - [ ] add the git-remote for github repo
     - [ ] push to new remote
     - [ ] delete the repo from local (?)
 
