@@ -4,8 +4,6 @@ var expect = require('chai').expect
 var sinon = require('sinon');
 var GitClient = require('../../src/gitClient.js');
 var Git = require("nodegit");
-var path = require("path");
-var local = path.join.bind(path, __dirname);
 
 describe('Git', function() {
   var gitClient = new GitClient()
@@ -46,18 +44,7 @@ describe('Git', function() {
     });
   });
   describe('Remote', function() {
-
-    var reposPath = local("../../");
     var createRemoteStub
-    var pushStub
-    beforeEach(() => {
-      var test = this;
-      return Git.Repository.open(reposPath)
-            .then(function(repository) {
-              test.repository = repository;
-              return Git.Remote.create(repository, 'github', 'https://github.com/aditya-mittal/foo.git')
-            })
-    })
 
     before(() => {
       createRemoteStub = sinon.stub(Git.Remote, 'create');
@@ -72,7 +59,7 @@ describe('Git', function() {
       var https_remote_url = "https://github.com/new-repo.git"
       var remote_name = "new_origin"
       var expectedRemote = Git.Remote
-      var repo = this.repository
+      var repo = Git.Repository.prototype
       createRemoteStub.withArgs(repo, remote_name, https_remote_url).returns(Promise.resolve(expectedRemote));
       //when
       var createdRemote = await gitClient.createRemote(repo, remote_name, https_remote_url, (remote) => remote)
@@ -83,30 +70,25 @@ describe('Git', function() {
   });
 
   describe('#push()', function() {
-      /*var cloneStub
-      var deleteRemoteStub
-      before(() => {
-        cloneStub = sinon.stub(Git, 'Clone');
-        cloneStub = sinon.stub(Git, 'Clone');
-      })
+    var pushStub
 
-      after(() => {
-        cloneStub.restore();
-      })*/
-      it.skip('should push to the remote for repo', async function() {
-            //given
-            var https_remote_url = "https://github.com/new-repo.git"
-            var remote_name = "new_origin"
-            var repo = this.repository
-            var remote = this.remote
-            createRemoteStub.withArgs(repo, remote_name, https_remote_url).returns(Promise.resolve(remote));
-            var ref_specs = ['refs/heads/*:refs/heads/*']
-            //when
-            var createdRemote = await gitClient.pushToRemote(remote, ref_specs, () => {})
-            //then
-            assert(remote.push.calledWithMatch(ref_specs));
-            assert(createdRemote, expectedRemote)
-          });
+    before(() => {
+      pushStub = sinon.stub(Git.Remote.prototype, 'push').returns(Promise.resolve(0));
+    })
+
+    after(() => {
+      pushStub.restore();
+    })
+
+    it('should push to the remote for repo', async function() {
+      //given
+      var remote = Git.Remote.prototype
+      var ref_specs = ['refs/heads/*:refs/heads/*']
+      //when
+      var pushed = await gitClient.pushToRemote(remote, ref_specs, () => {})
+      //then
+      assert(remote.push.calledWithMatch(ref_specs));
+    });
       it.skip('should push the repo', function() {
         //given
         var https_url_to_repo = "https://github.com/aditya-mittal/test-npm-git-clone.git"

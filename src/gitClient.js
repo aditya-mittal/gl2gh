@@ -30,7 +30,7 @@ function GitClient() {
                           },
                         },
                       };
-    return remote.push(ref_specs, pushOptions, () => {});
+    return remote.push(ref_specs, pushOptions, success_callback)
   };
 
   var _getAuthCredentials = function() {
