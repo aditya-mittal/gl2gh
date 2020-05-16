@@ -32,13 +32,14 @@ describe('Github client', function() {
       var isPrivate = true
       api.post('/user/repos/').reply(201, repoDetails);
       //when
-      var createdRepo = await githubClient.createRepo(repoName, isPrivate)
+      var repository = await githubClient.createRepo(repoName, isPrivate)
       //then
       try {
-        createdRepo.should.be.a('object');
-        createdRepo.should.be.instanceof(Repository);
-        createdRepo.should.have.property('name')
-        createdRepo.should.have.property('clone_url')
+        repository.should.be.a('object');
+        repository.should.be.instanceof(Repository);
+        repository.should.have.property('name')
+        repository.should.have.property('clone_url')
+        repository['name'].should.equal(repoName)
       } catch(err) {
         return
       }

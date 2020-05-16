@@ -15,5 +15,7 @@ describe('Repository', function() {
       repository.should.have.property('name')
       repository.should.have.property('clone_url')
       repository.should.have.all.keys('name', 'clone_url')
+      repository['name'].should.equal(name)
+      repository['clone_url'].should.equal(clone_url)
     });
 });
