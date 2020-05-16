@@ -4,7 +4,7 @@ var nock = require('nock');
 var GitlabClient = require('../../../src/gitlab/client.js');
 var Group = require('../../../src/gitlab/model/group.js');
 var Project = require('../../../src/gitlab/model/project.js');
-var groupDetails = require('../../resources/groupDetails.json')
+var groupDetails = require('../../resources/gitlab/groupDetails.json')
 
 describe('Gitlab client', function() {
   var GITLAB_URL = "gitlab.com"

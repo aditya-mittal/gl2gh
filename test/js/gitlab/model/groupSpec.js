@@ -1,7 +1,7 @@
 var should = require('chai').should();
 var Group = require('../../../../src/gitlab/model/group.js');
 var Project = require('../../../../src/gitlab/model/project.js');
-var groupDetails = require('../../../resources/groupDetails.json')
+var groupDetails = require('../../../resources/gitlab/groupDetails.json')
 
 describe('Group', function() {
   describe('#getProjects()', function() {
