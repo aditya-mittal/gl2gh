@@ -16,7 +16,7 @@ describe('Github client', function() {
               'https://api.github.com', {
                 reqHeaders: {
                   'Content-Type': 'application/json',
-                  'Private-Token': GITHUB_PRIVATE_TOKEN
+                  'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
                 }
               }
             )

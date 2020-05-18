@@ -61,6 +61,7 @@ describe('Gitlab client', function() {
         return  // this is important
       }
     });
+
     it('should throw error when error obtained while fetching group', async() => {
       //given
       var groupName = "error"

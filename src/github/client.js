@@ -13,14 +13,14 @@ function GithubClient(url, privateToken) {
       var req = https.request(options, function(res) {
         let data = '';
         res.setEncoding('utf8');
-        console.log(`create repo with ${repoName} returned STATUS: ${res.statusCode}`);
+        console.log(`create repo ${repoName} returned STATUS: ${res.statusCode}`);
         res.on('data', function (chunk) {
           data += chunk;
         });
 
         res.on('end', () => {
           if(res.statusCode === 201) {
-            resolve(new Repository(JSON.parse(data)));
+            resolve(new Repository(JSON.parse(data).name, JSON.parse(data).clone_url));
           } else {
             reject({
              'message': `Unable to create repo with name ${repoName}`

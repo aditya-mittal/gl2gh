@@ -16,7 +16,7 @@ describe('Group', function() {
       projectList[0].should.be.a('object');
       projectList[0].should.be.instanceof(Project);
       projectList[0].should.have.property('name')
-      projectList[0].should.have.property('ssh_url_to_repo')
+      projectList[0].should.have.property('http_url_to_repo')
     });
   });
 });

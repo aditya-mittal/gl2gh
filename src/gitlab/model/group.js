@@ -3,7 +3,7 @@ function Group(options) {
   this.body = options
 
   this.getProjects = function () {
-    return this.body.projects.map(project => new Project({name: project.name, ssh_url_to_repo: project.ssh_url_to_repo}))
+    return this.body.projects.map(project => new Project(project.name, project.http_url_to_repo))
   }
 }
 

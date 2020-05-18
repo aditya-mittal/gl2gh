@@ -1,6 +1,6 @@
-function Project(name, ssh_url_to_repo) {
+function Project(name, http_url_to_repo) {
   this.name = name
-  this.ssh_url_to_repo = ssh_url_to_repo
+  this.http_url_to_repo = http_url_to_repo
 }
 
 module.exports = Project;
