@@ -16,7 +16,7 @@
 - [ ] create organisation on github
 - [ ] for every gitlab repo
     - [x] clone the repo on local & change directory to it
-    - [ ] create its equivalent bare repo on github
+    - [x] create its equivalent bare repo on github
     - [ ] add the git-remote for github repo
     - [ ] push to new remote
     - [ ] delete the repo from local (?)

@@ -27,6 +27,7 @@ describe('Git', function() {
       var clonedRepo = await gitClient.clone(https_url_to_repo, local_path, (repo) => repo)
       //then
       assert(Git.Clone.calledWithMatch(https_url_to_repo, local_path));
+      expect(cloneStub.called).to.equal(true)
       assert(clonedRepo, expectedRepo)
     });
 
