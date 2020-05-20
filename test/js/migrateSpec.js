@@ -21,9 +21,13 @@ describe('migrate', function() {
   var GITHUB_PRIVATE_TOKEN = "some_private_token"
 
   var gitlabApi
+  var githubApi
   var gitCloneStub
+  var gitCreateRemoteStub
   describe('migrate gitlab repo(s) to github', function() {
-    before(() => {
+    beforeEach(() => {
+      gitCloneStub = sinon.stub(Git, 'Clone');
+      gitCreateRemoteStub = sinon.stub(Git.Remote, 'create');
       gitlabApi = nock(
                     GITLAB_URL, {
                       reqHeaders: {
@@ -32,50 +36,34 @@ describe('migrate', function() {
                       }
                     }
                   )
-      nock(
-        GITHUB_API_URL, {
-          reqHeaders: {
-            'Content-Type': 'application/json',
-            'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-          }
-        }
-      ).post('/user/repos/').reply(201, githubRepoDetails)
-      nock(
-        GITHUB_API_URL, {
-          reqHeaders: {
-            'Content-Type': 'application/json',
-            'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-          }
-        }
-      ).post('/user/repos/').reply(201, githubRepoDetails)
-      nock(
-        GITHUB_API_URL, {
-          reqHeaders: {
-            'Content-Type': 'application/json',
-            'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-          }
-        }
-      ).post('/user/repos/').reply(201, githubRepoDetails)
-      gitCloneStub = sinon.stub(Git, 'Clone');
+      githubApi = nock(
+                    GITHUB_API_URL, {
+                      reqHeaders: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
+                      }
+                    }
+                  )
     });
 
-    after(() => {
-      nock.cleanAll()
+    afterEach(() => {
       sinon.restore();
+      nock.cleanAll();
     });
 
-    it('should migrate all repos under the gitlab group to github', function(done) {
+    it.only('should migrate all repos under the gitlab group to github', async function() {
       //given
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(200, gitlabGroupDetails);
+      githubApi.post('/user/repos/').thrice().reply(201, githubRepoDetails)
       var expectedRepo = Git.Repository
       gitCloneStub.returns(Promise.resolve(expectedRepo));
+      var expectedRemote = Git.Remote
+      gitCreateRemoteStub.returns(Promise.resolve(expectedRemote));
       //when
-      migrate.migrateToGithub(gitlabGroupName, githubOrgName);
-      done();
+      await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
       //then
-      assert(Git.Clone.called());
       expect(gitCloneStub.called).to.equal(true)
     });
   });
