@@ -51,23 +51,24 @@ describe('migrate', function() {
       nock.cleanAll();
     });
 
-    it('should migrate all repos under the gitlab group to github', async function() {
+    it.only('should migrate all repos under the gitlab group to github', async function() {
       //given
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(200, gitlabGroupDetails);
       githubApi.post('/user/repos/').thrice().reply(201, githubRepoDetails)
-      var expectedRepo = Git.Repository
-      gitCloneStub.returns(Promise.resolve(expectedRepo));
+      gitCloneStub.returns(Promise.resolve(Git.Repository));
+      gitCreateRemoteStub.returns(Promise.resolve(Git.Remote));
       var expectedRemote = Git.Remote
       gitCreateRemoteStub.returns(Promise.resolve(expectedRemote));
       //when
       await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
       //then
       expect(gitCloneStub.calledThrice).to.equal(true);
-      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
-      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
-      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
+      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
+      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
+      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
+//      expect(gitCreateRemoteStub.calledThrice).to.equal(true);
     });
   });
 });
