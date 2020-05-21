@@ -9,17 +9,15 @@ function Migrate() {
   var githubClient = new GithubClient(config.GITHUB_URL, config.GITHUB_TOKEN)
 
   this.migrateToGithub = function(gitlabGroupName, githubOrgName) {
-    var projects = gitlabClient.getGroup(gitlabGroupName)
+    return gitlabClient.getGroup(gitlabGroupName)
       .then(group => group.getProjects())
       .then(projects => projects.forEach(_migrateProjectToGithub));
   };
 
-  var _migrateProjectToGithub = function(project, index) {
-    githubClient.createRepo(project.name, true)
-                          .then(githubRepository => {
-                            var githubCloneUrl = githubRepository.clone_url
-                            gitClient.clone(project.http_url_to_repo, project.name, (repository) => repository);
-                          });
+  var _migrateProjectToGithub = async function(project, index) {
+    var githubRepo = githubClient.createRepo(project.name, true)
+                          .then(githubRepository => githubRepository);
+    return gitClient.clone(project.http_url_to_repo, project.name, (repository) => {console.log('cloned succesfully')});
 
   };
 };

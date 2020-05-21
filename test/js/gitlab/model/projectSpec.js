@@ -3,7 +3,7 @@ var should = require('chai').should();
 var Project = require('../../../../src/gitlab/model/project.js');
 
 describe('Project', function() {
-    it('must have name and ssh_url', function() {
+    it('must have name and http_url', function() {
       //given
       var name = "repository-1";
       var http_url_to_repo = "https://gitlab.com/FOO/repository-1.git";

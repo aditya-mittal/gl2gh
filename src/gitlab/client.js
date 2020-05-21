@@ -6,6 +6,7 @@ function GitlabClient(url, privateToken) {
   this.privateToken = privateToken
 
   this.getGroup = function(groupName) {
+    console.log('++++++++++++++++++++++gitlab client getGroup called++++++++++++++++')
     var path = '/groups/' + groupName;
     var options = this._getRequestOptions('GET', path);
 

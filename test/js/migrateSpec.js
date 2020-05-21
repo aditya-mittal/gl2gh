@@ -51,7 +51,7 @@ describe('migrate', function() {
       nock.cleanAll();
     });
 
-    it.only('should migrate all repos under the gitlab group to github', async function() {
+    it('should migrate all repos under the gitlab group to github', async function() {
       //given
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
@@ -64,7 +64,10 @@ describe('migrate', function() {
       //when
       await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
       //then
-      expect(gitCloneStub.called).to.equal(true)
+      expect(gitCloneStub.calledThrice).to.equal(true);
+      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
+      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
+      assert(Git.Clone.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
     });
   });
 });
