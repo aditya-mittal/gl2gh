@@ -24,10 +24,12 @@ describe('migrate', function() {
   var githubApi
   var gitCloneStub
   var gitCreateRemoteStub
+  var gitPushToRemoteStub
   describe('migrate gitlab repo(s) to github', function() {
-    beforeEach(() => {
+    before(() => {
       gitCloneStub = sinon.stub(Git, 'Clone');
       gitCreateRemoteStub = sinon.stub(Git.Remote, 'create');
+      gitPushToRemoteStub = sinon.stub(Git.Remote.prototype, 'push');
       gitlabApi = nock(
                     GITLAB_URL, {
                       reqHeaders: {
@@ -46,29 +48,36 @@ describe('migrate', function() {
                   )
     });
 
-    afterEach(() => {
+    after(() => {
       sinon.restore();
       nock.cleanAll();
     });
 
-    it.only('should migrate all repos under the gitlab group to github', async function() {
+    it('should migrate all repos under the gitlab group to github', async () =>  {
       //given
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(200, gitlabGroupDetails);
       githubApi.post('/user/repos/').thrice().reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve(Git.Repository));
-      gitCreateRemoteStub.returns(Promise.resolve(Git.Remote));
-      var expectedRemote = Git.Remote
-      gitCreateRemoteStub.returns(Promise.resolve(expectedRemote));
+      gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
+      gitPushToRemoteStub.returns(Promise.resolve(0));
       //when
+      try {
       await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
       //then
-      expect(gitCloneStub.calledThrice).to.equal(true);
-      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
-      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
-      assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
-//      expect(gitCreateRemoteStub.calledThrice).to.equal(true);
+        setTimeout(() => {
+          expect(gitCloneStub.calledThrice).to.equal(true);
+          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
+          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
+          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
+          expect(gitCreateRemoteStub.calledThrice).to.equal(true);
+          expect(gitPushToRemoteStub.calledThrice).to.equal(true);
+        }, 2000);
+
+      } catch (err) {
+        return;
+      }
     });
   });
 });

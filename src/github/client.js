@@ -6,6 +6,7 @@ function GithubClient(url, privateToken) {
   this.privateToken = privateToken
 
   this.createRepo = function(repoName, isPrivate) {
+    console.log('----------------github client createRepo called ----------------')
     var path = '/user/repos/';
     var options = this._getRequestOptions('POST', path);
 

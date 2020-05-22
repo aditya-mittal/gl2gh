@@ -15,20 +15,29 @@ function Migrate() {
   };
 
   var _migrateProjectToGithub = async function(project, index) {
-    await githubClient.createRepo(project.name, true)
-                          .then(githubRepository => githubRepository)
-                          .then(gitClient.clone(project.http_url_to_repo, project.name, (repository) => {repository}))
+     await githubClient.createRepo(project.name, true)
+                          .then(githubRepository => {
+                            console.log(githubRepository)
+                            _cloneRepoToLocal(project.http_url_to_repo, project.name, githubRepository.clone_url)
+                          })
+//                          .then(gitClient.clone(project.http_url_to_repo, project.name, (repository) => {repository}));
   };
 
-  var _cloneRepoToLocal = async function(http_url_to_repo, local_path) {
-    gitClient.clone(http_url_to_repo, local_path, (repository) => {_createNewRemoteForRepo, githubRepo.clone_url})
+  var _cloneRepoToLocal = async function(http_url_to_repo, local_path, githubCloneUrl) {
+    await gitClient.clone(http_url_to_repo, local_path, (clonedRepo) => {
+      _createNewRemoteForRepo(clonedRepo, githubCloneUrl)
+    })
   }
 
   var _createNewRemoteForRepo = async function(repo, clone_url) {
-    console.log('******************')
     var remote_name = "github"
-    await gitClient.createRemote(repo, remote_name, clone_url, (remote) => remote)
+    await gitClient.createRemote(repo, remote_name, clone_url, (remote) => {_pushToRemote(remote)})
   }
+
+  var _pushToRemote = async function(remote) {
+      var ref_specs = ['refs/heads/*:refs/heads/*']
+      await gitClient.pushToRemote(remote, ref_specs, () => {console.log('pushed to github')});
+    }
 };
 
 module.exports = Migrate;

@@ -4,6 +4,7 @@ var config = require("./config.js");
 function GitClient() {
 
   this.clone = function(https_url_to_repo, local_path, success_callback) {
+    console.log('***********git clone called*****************')
     return Git.Clone(https_url_to_repo, local_path)
         .then((repository) => success_callback(repository))
         .catch((err) => {
@@ -12,6 +13,7 @@ function GitClient() {
   }
 
   this.createRemote = function(repo, remote_name, https_remote_url, success_callback) {
+    console.log('***********git createRemote called*****************')
     return Git.Remote.create(repo, remote_name, https_remote_url)
         .then((remote) => success_callback(remote))
         .catch((err) => {
