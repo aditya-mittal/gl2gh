@@ -90,7 +90,7 @@ describe('Git', function() {
       //then
       assert(remote.push.calledWithMatch(ref_specs));
     });
-      it.skip('should push the repo', function() {
+    it.skip('should push the repo', function() {
         //given
         var https_url_to_repo = "https://github.com/aditya-mittal/test-npm-git-clone.git"
         var local_path = "test-npm-git-clone"
@@ -108,7 +108,7 @@ describe('Git', function() {
 
         var getAuthCredentials = function() {
           var username = "aditya-mittal"
-          var token = "fb29e1e3033b11af00b7ab53eed646872903da6a"
+          var token = "someToken"
           return Git.Cred.userpassPlaintextNew(username, token);
         }
         var pushToRemote = function(remote) {
@@ -137,44 +137,6 @@ describe('Git', function() {
            });;
 
 
-        /*var clonedRepo = await gitClient.clone(https_url_to_repo, local_path, (repo) => function(repo) {
-          Git.Remote.delete(repo, 'origin')
-        })*/
-        //then
-        //assert(Git.Clone.calledWithMatch(https_url_to_repo, local_path));
-        //assert(clonedRepo, expectedRepo)
-      });
-      it.skip('actual - should update the remote for the repo', function() {
-        //given
-        var https_url_to_repo = "https://github.com/aditya-mittal/test-npm-git-clone.git"
-        var local_path = "test-npm-git-clone"
-        var expectedRepo = Git.Repository
-        //when
-        Git.Clone(https_url_to_repo, local_path)
-            .then(function(repo) {
-              console.log('cloned remote repo')
-              console.log(repo)
-              setTimeout(function() {
-                Git.Remote.delete(repo, 'origin')
-                  .then(() => {
-                    console.log('Remote deleted successfully')
-                  })
-                  .catch((err) => {
-                    console.log("errorError while deleting remote: "+err);
-                  })
-              }, 1000);
-              setTimeout(function() {
-                Git.Remote.create(repo, 'origin', 'https://github.com/aditya-mittal/foo.git')
-                  .then(() => {
-                    console.log('Remote created successfully')
-                  })
-                  .catch((err) => {
-                    console.log("error: Error while creating remote: "+err);
-                  })
-              }, 3000);
-            }).catch((err) => {
-              console.log("error: " + err);
-            });
         /*var clonedRepo = await gitClient.clone(https_url_to_repo, local_path, (repo) => function(repo) {
           Git.Remote.delete(repo, 'origin')
         })*/
