@@ -41,7 +41,7 @@ describe('Github client', function() {
         repository.should.have.property('clone_url')
         repository['name'].should.equal(repoName)
       } catch(err) {
-        return
+        throw err
       }
     });
     it('should throw error when non 201 status received while creating repo', async() => {

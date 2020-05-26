@@ -62,11 +62,12 @@ describe('migrate', function() {
       gitCloneStub.returns(Promise.resolve(Git.Repository));
       gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
       gitPushToRemoteStub.returns(Promise.resolve(0));
+      let timerId = '';
       //when
       try {
       await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
       //then
-        setTimeout(() => {
+        timerId = setTimeout(() => {
           expect(gitCloneStub.calledThrice).to.equal(true);
           assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
           assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
@@ -76,7 +77,8 @@ describe('migrate', function() {
         }, 2000);
 
       } catch (err) {
-        return;
+        throw err;
+        clearTimeout(timerId);
       }
     });
   });

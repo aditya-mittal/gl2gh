@@ -1,5 +1,6 @@
 var https = require('https');
 var Group = require('./model/group.js');
+var Subgroup = require('./model/subgroup.js');
 
 function GitlabClient(url, privateToken) {
   this.url = url
@@ -38,6 +39,44 @@ function GitlabClient(url, privateToken) {
       req.end()
     });
   }
+
+  this.getSubGroups = function(groupName) {
+      console.log('++++++++++++++++++++++gitlab client getSubGroups called++++++++++++++++')
+      var path = '/groups/' + groupName + "/subgroups";
+      var options = this._getRequestOptions('GET', path);
+
+      return new Promise(function(resolve, reject) {
+        var req = https.request(options, function(res) {
+          let data = '';
+          res.setEncoding('utf8');
+          console.log(`get subgroups for ${groupName} returned STATUS: ${res.statusCode}`);
+          res.on('data', function (chunk) {
+            data += chunk;
+          });
+
+          res.on('end', () => {
+            if(res.statusCode === 200) {
+              var subgroups = [];
+              JSON.parse(data).forEach(function(subgroup) {
+                subgroups.push(new Subgroup(subgroup.name));
+              });
+              resolve(subgroups);
+            } else {
+              reject({
+               'message': `No group found with name ${groupName}, cant fetch subgroups`
+              })
+            }
+          });
+        });
+
+        req.on('error', error => {
+          reject({
+           'message': 'Error while fetching subgroups'
+          })
+        })
+        req.end()
+      });
+    }
 
   this._getRequestOptions = function (method, path) {
     return {
