@@ -8,6 +8,7 @@ var Project = require('../../../src/gitlab/model/project.js');
 var Subgroup = require('../../../src/gitlab/model/subgroup.js');
 var groupDetails = require('../../resources/gitlab/groupDetails.json')
 var subgroupsList = require('../../resources/gitlab/subgroupsList.json')
+var subgroupDetails = require('../../resources/gitlab/subgroupDetails.json')
 
 describe('Gitlab client', function() {
   var GITLAB_URL = "gitlab.com"
@@ -81,7 +82,7 @@ describe('Gitlab client', function() {
     });
   });
 
-  describe('#getSubGroups', function() {
+  describe('#getSubgroups', function() {
       beforeEach(() => {
         api = nock(
                 'https://gitlab.com', {
@@ -142,6 +143,76 @@ describe('Gitlab client', function() {
         } catch (err) {
           // optional, check for specific error (or error.type, error. message to contain …)
           assert.deepEqual(err, { 'message': 'Error while fetching subgroups' })
+          return  // this is important
+        }
+      });
+    });
+
+  describe('#getSubgroup', function() {
+      beforeEach(() => {
+        api = nock(
+                'https://gitlab.com', {
+                  reqHeaders: {
+                    'Content-Type': 'application/json',
+                    'Private-Token': GITLAB_PRIVATE_TOKEN
+                  }
+                }
+              )
+      });
+
+      afterEach(() => {
+        nock.cleanAll()
+      });
+
+      it('should return details for the subgroup with name subgroup1', async() => {
+        //given
+        var groupName = "FOO"
+        var subgroupName = "subgroup1"
+        api.get('/api/v4/groups/'+groupName+encodeURIComponent("/")+subgroupName).reply(200, subgroupDetails);
+        //when
+        var subgroup = await gitlabClient.getSubgroup(groupName, subgroupName)
+        //then
+        try {
+          var projectList = subgroup.getProjects()
+          projectList.should.be.an('array');
+          projectList.should.have.lengthOf(2);
+          projectList[0].should.be.a('object');
+          projectList[0].should.be.instanceof(Project);
+          projectList[0].should.have.property('name')
+          projectList[0].should.have.property('http_url_to_repo')
+        } catch(err) {
+          throw err;
+        }
+      });
+
+      it('should throw error when subgroup not found', async() => {
+        //given
+        var groupName = "FOO"
+        var subgroupName = "non-existing-group"
+        api.get('/api/v4/groups/'+groupName+encodeURIComponent("/")+subgroupName).reply(404);
+        //when
+        try {
+          await gitlabClient.getSubgroup(groupName, subgroupName)
+          // a failing assert here is a bad idea, since it would lead into the catch clause…
+        } catch (err) {
+          // optional, check for specific error (or error.type, error. message to contain …)
+          assert.deepEqual(err, { 'message': `No subgroup found with name ${subgroupName}` })
+          return  // this is important
+        }
+      });
+
+      it('should throw error when error obtained while fetching subgroup', async() => {
+        //given
+        var groupName = "FOO"
+        var subgroupName = "error"
+        api.get('/api/v4/groups/'+groupName+encodeURIComponent("/")+subgroupName).replyWithError('some error occurred while fetching subgroup');
+        //when
+        try {
+          await gitlabClient.getSubgroup(groupName, subgroupName)
+          // a failing assert here is a bad idea, since it would lead into the catch clause…
+        } catch (err) {
+          // optional, check for specific error (or error.type, error. message to contain …)
+          assert.deepEqual(err, { 'message': 'Error while fetching subgroup details' })
           return  // this is important
         }
       });

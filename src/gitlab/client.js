@@ -40,6 +40,40 @@ function GitlabClient(url, privateToken) {
     });
   }
 
+  this.getSubgroup = function(groupName, subgroupName) {
+      console.log('++++++++++++++++++++++gitlab client getSubgroup called++++++++++++++++')
+      var path = '/groups/' + groupName + encodeURIComponent("/") + subgroupName;
+      var options = this._getRequestOptions('GET', path);
+
+      return new Promise(function(resolve, reject) {
+        var req = https.request(options, function(res) {
+          let data = '';
+          res.setEncoding('utf8');
+          console.log(`get subgroup details for ${subgroupName} returned STATUS: ${res.statusCode}`);
+          res.on('data', function (chunk) {
+            data += chunk;
+          });
+
+          res.on('end', () => {
+            if(res.statusCode === 200) {
+              resolve(new Group(JSON.parse(data)));
+            } else {
+              reject({
+               'message': `No subgroup found with name ${subgroupName}`
+              })
+            }
+          });
+        });
+
+        req.on('error', error => {
+          reject({
+           'message': 'Error while fetching subgroup details'
+          })
+        })
+        req.end()
+      });
+    }
+
   this.getSubGroups = function(groupName) {
       console.log('++++++++++++++++++++++gitlab client getSubGroups called++++++++++++++++')
       var path = '/groups/' + groupName + "/subgroups";
