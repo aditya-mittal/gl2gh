@@ -1,5 +1,8 @@
 # Migrate Gitlab repo(s) to Github
 
+Migrate all the projects within a specific group on Gitlab to repositories 
+under specific organisation on Github. 
+
 ### Run the tests
 ```bash
     npm test
@@ -22,7 +25,7 @@
 
 - [ ] Create list of all gitlab repos to be migrated
     - [x] get list of all projects
-    - [ ] get list of all subgroups and then each project within that subgroup
+    - [x] get list of all subgroups and then each project within that subgroup
     - [ ] get list of shared projects
     - [ ] exclude any specific project
 - [ ] create organisation on github
@@ -31,6 +34,8 @@
     - [x] create its equivalent bare repo on github
     - [x] add the git-remote for github repo
     - [x] push to new remote
-    - [ ] delete the repo from local (?)   
-    
+    - [ ] delete the repo from local (?)
+    - [ ] archive the repository on gitlab (?)
+
+
 

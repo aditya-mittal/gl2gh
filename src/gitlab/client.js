@@ -74,7 +74,7 @@ function GitlabClient(url, privateToken) {
       });
     }
 
-  this.getSubGroups = function(groupName) {
+  this.getSubgroups = function(groupName) {
       console.log('++++++++++++++++++++++gitlab client getSubGroups called++++++++++++++++')
       var path = '/groups/' + groupName + "/subgroups";
       var options = this._getRequestOptions('GET', path);

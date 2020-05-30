@@ -6,11 +6,15 @@ var sinon = require('sinon');
 var Git = require("nodegit");
 
 var GitlabGroup = require('../../src/gitlab/model/group.js');
+var GitlabSubgroup = require('../../src/gitlab/model/subgroup.js');
 var GitlabProject = require('../../src/gitlab/model/project.js');
 var GithubRepository = require('../../src/github/model/repository.js');
 var Migrate = require('../../src/migrate.js');
 var githubRepoDetails = require('../resources/github/repoDetails.json')
 var gitlabGroupDetails = require('../resources/gitlab/groupDetails.json')
+var gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json')
+var gitlabSubgroup1Details = require('../resources/gitlab/subgroup1Details.json')
+var gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.json')
 
 describe('migrate', function() {
   var migrate = new Migrate()
@@ -58,24 +62,30 @@ describe('migrate', function() {
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(200, gitlabGroupDetails);
-      githubApi.post('/user/repos/').thrice().reply(201, githubRepoDetails)
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
+      githubApi.post('/user/repos/').times(7).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve(Git.Repository));
       gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
       gitPushToRemoteStub.returns(Promise.resolve(0));
       let timerId = '';
       //when
       try {
-      await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
-      //then
-        timerId = setTimeout(() => {
-          expect(gitCloneStub.calledThrice).to.equal(true);
-          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-1.git", "repository-1"));
-          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-2.git", "repository-2"));
-          assert(gitCloneStub.calledWithMatch("https://gitlab.com/FOO/repository-3.git", "repository-3"));
-          expect(gitCreateRemoteStub.calledThrice).to.equal(true);
-          expect(gitPushToRemoteStub.calledThrice).to.equal(true);
-        }, 2000);
-
+        var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
+        //then
+        result.map(() => {
+          sinon.assert.callCount(gitCloneStub, 7)
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-1.git", "repository-1");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-2.git", "repository-2");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-3.git", "repository-3");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup1/project1.git", "project1");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup1/project2.git", "project2");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project1.git", "project1");
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project2.git", "project2");
+          sinon.assert.callCount(gitCreateRemoteStub, 7)
+          sinon.assert.callCount(gitPushToRemoteStub, 7)
+        });
       } catch (err) {
         throw err;
         clearTimeout(timerId);

@@ -22,6 +22,7 @@ function GitClient() {
   }
 
   this.pushToRemote = function(remote, ref_specs, success_callback) {
+  console.log('***********git pushToRemote called*****************')
     var pushOptions = {
                         ignoreCertErrors: 1,
                         callbacks: {

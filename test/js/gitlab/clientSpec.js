@@ -8,7 +8,7 @@ var Project = require('../../../src/gitlab/model/project.js');
 var Subgroup = require('../../../src/gitlab/model/subgroup.js');
 var groupDetails = require('../../resources/gitlab/groupDetails.json')
 var subgroupsList = require('../../resources/gitlab/subgroupsList.json')
-var subgroupDetails = require('../../resources/gitlab/subgroupDetails.json')
+var subgroupDetails = require('../../resources/gitlab/subgroup1Details.json')
 
 describe('Gitlab client', function() {
   var GITLAB_URL = "gitlab.com"
@@ -103,12 +103,11 @@ describe('Gitlab client', function() {
         var groupName = "FOO"
         api.get('/api/v4/groups/'+groupName+'/subgroups').reply(200, subgroupsList);
         //when
-        var subgroups = await gitlabClient.getSubGroups(groupName)
+        var subgroups = await gitlabClient.getSubgroups(groupName)
         //then
         try {
           subgroups.should.be.an('array');
-          subgroups.should.have.lengthOf(6);
-          console.log(subgroups[0]);
+          subgroups.should.have.lengthOf(2);
           subgroups[0].should.be.a('object');
           subgroups[0].should.be.instanceof(Subgroup);
           subgroups[0].should.have.property('name')
@@ -123,7 +122,7 @@ describe('Gitlab client', function() {
         api.get('/api/v4/groups/'+groupName+'/subgroups').reply(404);
         //when
         try {
-          await gitlabClient.getSubGroups(groupName)
+          await gitlabClient.getSubgroups(groupName)
           // a failing assert here is a bad idea, since it would lead into the catch clause…
         } catch (err) {
           // optional, check for specific error (or error.type, error. message to contain …)
@@ -138,7 +137,7 @@ describe('Gitlab client', function() {
         api.get('/api/v4/groups/'+groupName+'/subgroups').replyWithError('some error occurred while fetching group');
         //when
         try {
-          await gitlabClient.getSubGroups(groupName)
+          await gitlabClient.getSubgroups(groupName)
           // a failing assert here is a bad idea, since it would lead into the catch clause…
         } catch (err) {
           // optional, check for specific error (or error.type, error. message to contain …)
