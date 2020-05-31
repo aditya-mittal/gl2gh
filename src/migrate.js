@@ -13,6 +13,7 @@ function Migrate() {
     var projects = [];
     projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
     projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
+    projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
     return _migrateProjectsToGithub(projects);
   };
 
@@ -50,6 +51,11 @@ function Migrate() {
     return gitlabClient.getGroup(gitlabGroupName)
       .then(group => group.getProjects())
   }
+
+  var _getProjectsSharedWithGroup = async function(gitlabGroupName) {
+      return gitlabClient.getGroup(gitlabGroupName)
+        .then(group => group.getSharedProjects())
+    }
 
   var _getProjectsForAllSubgroups = async function(gitlabGroupName) {
     var subgroups = await gitlabClient.getSubgroups(gitlabGroupName);

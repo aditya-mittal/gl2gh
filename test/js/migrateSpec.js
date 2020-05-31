@@ -61,11 +61,11 @@ describe('migrate', function() {
       //given
       var gitlabGroupName = "FOO"
       var githubOrgName = "BAR"
-      gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(200, gitlabGroupDetails);
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
-      githubApi.post('/user/repos/').times(7).reply(201, githubRepoDetails)
+      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve(Git.Repository));
       gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
       gitPushToRemoteStub.returns(Promise.resolve(0));
@@ -74,7 +74,7 @@ describe('migrate', function() {
         var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
         //then
         result.map(() => {
-          sinon.assert.callCount(gitCloneStub, 7)
+          sinon.assert.callCount(gitCloneStub, 8)
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-1.git", "repository-1");
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-2.git", "repository-2");
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-3.git", "repository-3");
@@ -82,8 +82,9 @@ describe('migrate', function() {
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup1/project2.git", "project2");
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project1.git", "project1");
           sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project2.git", "project2");
-          sinon.assert.callCount(gitCreateRemoteStub, 7)
-          sinon.assert.callCount(gitPushToRemoteStub, 7)
+          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/bar/shared-project1.git", "shared-project1");
+          sinon.assert.callCount(gitCreateRemoteStub, 8)
+          sinon.assert.callCount(gitPushToRemoteStub, 8)
         });
       } catch (err) {
         throw err;
