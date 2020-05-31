@@ -18,5 +18,18 @@ describe('Group', function() {
       projectList[0].should.have.property('name')
       projectList[0].should.have.property('http_url_to_repo')
     });
+    it('should return list of all shared projects', function() {
+      //given
+      var group = new Group(groupDetails)
+      //when
+      var projectList = group.getSharedProjects()
+      //then
+      projectList.should.be.an('array');
+      projectList.should.have.lengthOf(1);
+      projectList[0].should.be.a('object');
+      projectList[0].should.be.instanceof(Project);
+      projectList[0].should.have.property('name')
+      projectList[0].should.have.property('http_url_to_repo')
+    });
   });
 });

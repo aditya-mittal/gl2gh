@@ -69,7 +69,6 @@ describe('migrate', function() {
       gitCloneStub.returns(Promise.resolve(Git.Repository));
       gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
       gitPushToRemoteStub.returns(Promise.resolve(0));
-      let timerId = '';
       //when
       try {
         var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)

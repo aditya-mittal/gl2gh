@@ -51,6 +51,26 @@ describe('Gitlab client', function() {
       }
     });
 
+    it('should return shared-projects for the group with name FOO', async() => {
+      //given
+      var groupName = "FOO"
+      api.get('/api/v4/groups/'+groupName).reply(200, groupDetails);
+      //when
+      var group = await gitlabClient.getGroup(groupName)
+      //then
+      try {
+        var projectList = group.getSharedProjects()
+        projectList.should.be.an('array');
+        projectList.should.have.lengthOf(1);
+        projectList[0].should.be.a('object');
+        projectList[0].should.be.instanceof(Project);
+        projectList[0].should.have.property('name')
+        projectList[0].should.have.property('http_url_to_repo')
+      } catch(err) {
+        throw err;
+      }
+    });
+
     it('should throw error when group not found', async() => {
       //given
       var groupName = "non-existing-group"
