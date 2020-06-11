@@ -5,7 +5,12 @@ under specific organisation on Github.
 
 ### Run the tests
 ```bash
-    npm test
+    $ npm test
+```
+
+### Run the program
+```bash
+    $ npm start
 ```
 
 ### Some feature requests
@@ -20,13 +25,15 @@ under specific organisation on Github.
 - [ ] usage: run for a specific repository or a few repositories (say, when specified interactively at the command line, or in a file)
 - [ ] usage: error handling and recovery when run for a large number of repositories (such as all within a group). Repeated runs may skip certain repositories that are already migrated. 
 - [ ] usage: cleanup between runs, as well as when migrating multiple repositories to not require growing amount of disk space
+- [ ] usage: dry-run option
+- packaging tool to package the application
 
 ### Steps to migrate
 
 - [ ] Create list of all gitlab repos to be migrated
     - [x] get list of all projects
     - [x] get list of all subgroups and then each project within that subgroup
-    - [ ] get list of shared projects
+    - [x] get list of shared projects
     - [ ] exclude any specific project
 - [ ] create organisation on github
 - [ ] for every gitlab repo

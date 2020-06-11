@@ -88,8 +88,21 @@ describe('migrate', function() {
         });
       } catch (err) {
         throw err;
-        clearTimeout(timerId);
       }
     });
+
+    it.only('should handle error gracefully when details for gitlab group not found', async () =>  {
+          //given
+          var gitlabGroupName = "FOO"
+          var githubOrgName = "BAR"
+          gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(404);
+          //when
+          try {
+            await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
+          } catch(err) {
+            assert.deepEqual(err, { 'message': `No group found with name ${gitlabGroupName}` })
+            return
+          }
+        });
   });
 });

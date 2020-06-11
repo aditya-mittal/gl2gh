@@ -2,8 +2,9 @@
   "name": "migrate-repo",
   "version": "1.0.0",
   "description": "Migrates Gitlab repo(s) to Github",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
+    "start": "node src/main.js",
     "test": "mocha --recursive -w"
   },
   "author": "aditya-mittal",
@@ -12,7 +13,9 @@
     "chai": "^4.2.0",
     "mocha": "^7.1.2",
     "nock": "^12.0.3",
-    "nodegit": "^0.26.5",
     "sinon": "^9.0.2"
+  },
+  "dependencies": {
+    "nodegit": "^0.26.5"
   }
 }
