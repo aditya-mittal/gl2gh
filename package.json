@@ -16,7 +16,6 @@
     "sinon": "^9.0.2"
   },
   "dependencies": {
-    "isomorphic-git": "^1.4.4",
-    "nodegit": "^0.26.5"
+    "isomorphic-git": "^1.4.4"
   }
 }
