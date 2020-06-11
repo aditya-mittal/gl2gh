@@ -6,10 +6,9 @@ const config = require("./config.js");
 
 function GitClient() {
 
-  this.clone = function(https_url_to_repo, repo_name, success_callback) {
+  this.clone = function(https_url_to_repo, repo_name, path_to_clone_repo) {
     console.log('***********git clone called*****************')
-    const dir = path.join(process.cwd(), 'tmp','migrate', repo_name)
-    return git.clone({fs, http, dir, url: https_url_to_repo})
+    return git.clone({fs, http, path_to_clone_repo, url: https_url_to_repo})
   }
 
   this.addRemote = function(repo_path_on_local, remote_name, https_remote_url) {

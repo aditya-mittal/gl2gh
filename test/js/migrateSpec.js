@@ -3,7 +3,10 @@ var expect = require('chai').expect;
 var should = require('chai').should();
 var nock = require('nock');
 var sinon = require('sinon');
-var Git = require("nodegit");
+const path = require('path')
+const git = require('isomorphic-git')
+const http = require('isomorphic-git/http/node')
+const fs = require('fs')
 
 var GitlabGroup = require('../../src/gitlab/model/group.js');
 var GitlabSubgroup = require('../../src/gitlab/model/subgroup.js');
@@ -31,9 +34,9 @@ describe('migrate', function() {
   var gitPushToRemoteStub
   describe('migrate gitlab repo(s) to github', function() {
     before(() => {
-      gitCloneStub = sinon.stub(Git, 'Clone');
-      gitCreateRemoteStub = sinon.stub(Git.Remote, 'create');
-      gitPushToRemoteStub = sinon.stub(Git.Remote.prototype, 'push');
+      gitCloneStub = sinon.stub(git, 'clone');
+      gitCreateRemoteStub = sinon.stub(git, 'addRemote');
+      gitPushToRemoteStub = sinon.stub(git, 'push');
       gitlabApi = nock(
                     GITLAB_URL, {
                       reqHeaders: {
@@ -66,23 +69,15 @@ describe('migrate', function() {
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
       githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
-      gitCloneStub.returns(Promise.resolve(Git.Repository));
-      gitCreateRemoteStub.returns(Promise.resolve(Git.Remote.prototype));
-      gitPushToRemoteStub.returns(Promise.resolve(0));
+      gitCloneStub.returns(Promise.resolve());
+      gitCreateRemoteStub.returns(Promise.resolve());
+      gitPushToRemoteStub.returns(Promise.resolve());
       //when
       try {
         var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
         //then
         result.map(() => {
           sinon.assert.callCount(gitCloneStub, 8)
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-1.git", "repository-1");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-2.git", "repository-2");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/repository-3.git", "repository-3");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup1/project1.git", "project1");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup1/project2.git", "project2");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project1.git", "project1");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/FOO/subgroup2/project2.git", "project2");
-          sinon.assert.calledWith(gitCloneStub, "https://gitlab.com/bar/shared-project1.git", "shared-project1");
           sinon.assert.callCount(gitCreateRemoteStub, 8)
           sinon.assert.callCount(gitPushToRemoteStub, 8)
         });
@@ -92,17 +87,17 @@ describe('migrate', function() {
     });
 
     it('should handle error gracefully when details for gitlab group not found', async () =>  {
-          //given
-          var gitlabGroupName = "FOO"
-          var githubOrgName = "BAR"
-          gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(404);
-          //when
-          try {
-            await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
-          } catch(err) {
-            assert.deepEqual(err, { 'message': `No group found with name ${gitlabGroupName}` })
-            return
-          }
-        });
+      //given
+      var gitlabGroupName = "FOO"
+      var githubOrgName = "BAR"
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(404);
+      //when
+      try {
+        await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
+      } catch(err) {
+        assert.deepEqual(err, { 'message': `No group found with name ${gitlabGroupName}` })
+        return
+      }
+    });
   });
 });
