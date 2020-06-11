@@ -91,7 +91,7 @@ describe('migrate', function() {
       }
     });
 
-    it.only('should handle error gracefully when details for gitlab group not found', async () =>  {
+    it('should handle error gracefully when details for gitlab group not found', async () =>  {
           //given
           var gitlabGroupName = "FOO"
           var githubOrgName = "BAR"
