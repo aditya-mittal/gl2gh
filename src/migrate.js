@@ -12,10 +12,15 @@ function Migrate() {
 
   this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
     var projects = [];
-    projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
-    projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
-    projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
-    return _migrateProjectsToGithub(projects);
+    try {
+      projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
+      projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
+      projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
+      _migrateProjectsToGithub(projects);
+      return 0;
+    } catch(error) {
+      return -1;
+    }
   };
 
   var _getProjectsWithinGroup = async function(gitlabGroupName) {

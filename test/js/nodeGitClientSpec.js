@@ -2,7 +2,7 @@ var assert = require('chai').assert;
 var should = require('chai').should();
 var expect = require('chai').expect
 var sinon = require('sinon');
-var GitClient = require('../../src/gitClient.js');
+var GitClient = require('../../src/nodeGitClient.js');
 var Git = require("nodegit");
 
 describe('Git', function() {

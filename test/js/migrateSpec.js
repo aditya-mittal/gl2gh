@@ -76,7 +76,7 @@ describe('migrate', function() {
       try {
         var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
         //then
-        result.map(() => {
+        result.valueOf(() => {
           sinon.assert.callCount(gitCloneStub, 8)
           sinon.assert.callCount(gitCreateRemoteStub, 8)
           sinon.assert.callCount(gitPushToRemoteStub, 8)
