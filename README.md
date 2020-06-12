@@ -1,4 +1,4 @@
-# Migrate Gitlab repo(s) to Github
+# Migrate GitLab repo(s) to GitHub
 
 Migrate all the projects within a specific group on Gitlab to repositories 
 under specific organisation on Github. 
@@ -18,7 +18,7 @@ $ npm test
 $ npm run test-watch
 ```
 
-### Run the tests with mocha Jenkins reporter
+### Run the tests with Mocha Jenkins Reporter
 ```bash
 $ npm run test-jenkins
 ```
