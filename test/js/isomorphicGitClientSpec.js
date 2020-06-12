@@ -33,20 +33,19 @@ describe('Git', function() {
       expect(cloneStub.called).to.equal(true)
     });
 
-    it('should handle error when cloning the repo', async function() {
+    it.only('should handle error when cloning the repo', async function() {
       //given
       var https_url_to_repo = "https://github.com/some-repo.git"
       var repo_name = "some-repo"
       const path_to_clone_repo = path.join(process.cwd(), '/tmp','migrate', repo_name)
-      const dir = path.join(process.cwd(), 'tmp','migrate', repo_name)
       var errorDetails = {"error": "Error occurred while cloning the repo"}
-      cloneStub.withArgs({fs, http, dir, url: https_url_to_repo}).returns(Promise.reject(errorDetails));
+      cloneStub.withArgs({fs, http, path_to_clone_repo, url: https_url_to_repo}).returns(Promise.reject(errorDetails));
       //when
       try {
         await gitClient.clone(https_url_to_repo, repo_name, path_to_clone_repo)
       } catch(err) {
         //then
-        assert(git.clone.calledWithMatch({fs, http, dir, url: https_url_to_repo}));
+        assert(git.clone.calledWithMatch({fs, http, path_to_clone_repo, url: https_url_to_repo}));
         assert.deepEqual(err, errorDetails)
       }
     });
