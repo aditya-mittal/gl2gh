@@ -27,16 +27,3 @@ $ npm run test-jenkins
 ```bash
 $ npm start
 ```
-
-### Build the docker image
-```bash
-$ docker build -t migration/migrate-gitlab-to-github .
-```
-
-### Run the docker image
-```bash
-$ docker run --name migrate migration/migrate-gitlab-to-github
-```
-
-
-
