@@ -1,125 +1,77 @@
-var https = require('https');
-var Group = require('./model/group.js');
-var Subgroup = require('./model/subgroup.js');
+const axios = require('axios').default;
+const Group = require('./model/group.js');
+const Subgroup = require('./model/subgroup.js');
 
 function GitlabClient(url, privateToken) {
   this.url = url
   this.privateToken = privateToken
 
   this.getGroup = function(groupName) {
-    console.log('++++++++++++++++++++++gitlab client getGroup called++++++++++++++++')
-    var path = '/groups/' + groupName;
-    var options = this._getRequestOptions('GET', path);
+    const path = '/groups/' + groupName;
+    const params = this._getParams('GET', path)
 
-    return new Promise(function(resolve, reject) {
-      var req = https.request(options, function(res) {
-        let data = '';
-        res.setEncoding('utf8');
-        console.log(`get group details for ${groupName} returned STATUS: ${res.statusCode}`);
-        res.on('data', function (chunk) {
-          data += chunk;
-        });
-
-        res.on('end', () => {
-          if(res.statusCode === 200) {
-            resolve(new Group(JSON.parse(data)));
-          } else {
-            reject({
-             'message': `No group found with name ${groupName}`
-            })
-          }
-        });
-      });
-
-      req.on('error', error => {
-        reject({
-         'message': 'Error while fetching group details'
-        })
+    return axios(params)
+      .then(response => {
+        return new Group(response.data);
       })
-      req.end()
-    });
+      .catch((error) => {
+        if(error.response && error.response.status === 404) {
+          console.error('No GitLab group found with name %s: %s', groupName, error.message);
+          throw new Error(`No group found with name ${groupName}`);
+        }
+        console.error('Error while fetching GitLab group %s: %s', groupName, error.message);
+        throw new Error(`Error while fetching GitLab group: ${groupName}`);
+      });
   }
 
   this.getSubgroup = function(groupName, subgroupName) {
-      console.log('++++++++++++++++++++++gitlab client getSubgroup called++++++++++++++++')
-      var path = '/groups/' + groupName + encodeURIComponent("/") + subgroupName;
-      var options = this._getRequestOptions('GET', path);
+    const path = `/groups/${groupName}${encodeURIComponent("/")}${subgroupName}`
+    const params = this._getParams('GET', path)
 
-      return new Promise(function(resolve, reject) {
-        var req = https.request(options, function(res) {
-          let data = '';
-          res.setEncoding('utf8');
-          console.log(`get subgroup details for ${subgroupName} returned STATUS: ${res.statusCode}`);
-          res.on('data', function (chunk) {
-            data += chunk;
-          });
-
-          res.on('end', () => {
-            if(res.statusCode === 200) {
-              resolve(new Group(JSON.parse(data)));
-            } else {
-              reject({
-               'message': `No subgroup found with name ${subgroupName}`
-              })
-            }
-          });
-        });
-
-        req.on('error', error => {
-          reject({
-           'message': 'Error while fetching subgroup details'
-          })
-        })
-        req.end()
+    return axios(params)
+      .then(response => {
+        return new Group(response.data);
+      })
+      .catch((error) => {
+        console.error(error)
+        if(error.response && error.response.status === 404){
+          console.error('No subgroup found with name %s: %s', subgroupName, error.message);
+          throw new Error(`No subgroup found with name ${subgroupName}`)
+        }
+        console.error('Error while fetching subgroup %s: %s', subgroupName, error.message)
+        throw new Error(`Error while fetching subgroup ${subgroupName}`);
       });
-    }
+  }
 
   this.getSubgroups = function(groupName) {
-      console.log('++++++++++++++++++++++gitlab client getSubGroups called++++++++++++++++')
-      var path = '/groups/' + groupName + "/subgroups";
-      var options = this._getRequestOptions('GET', path);
+    const path = `/groups/${groupName}/subgroups`;
+    const params = this._getParams('GET', path)
 
-      return new Promise(function(resolve, reject) {
-        var req = https.request(options, function(res) {
-          let data = '';
-          res.setEncoding('utf8');
-          console.log(`get subgroups for ${groupName} returned STATUS: ${res.statusCode}`);
-          res.on('data', function (chunk) {
-            data += chunk;
-          });
-
-          res.on('end', () => {
-            if(res.statusCode === 200) {
-              var subgroups = [];
-              JSON.parse(data).forEach(function(subgroup) {
-                subgroups.push(new Subgroup(subgroup.name));
-              });
-              resolve(subgroups);
-            } else {
-              reject({
-               'message': `No group found with name ${groupName}, cant fetch subgroups`
-              })
-            }
-          });
+    return axios(params)
+      .then(response => {
+        let subgroups = [];
+        response.data.forEach(function(subgroup) {
+          subgroups.push(new Subgroup(subgroup.name));
         });
-
-        req.on('error', error => {
-          reject({
-           'message': 'Error while fetching subgroups'
-          })
-        })
-        req.end()
+        return subgroups;
+      })
+      .catch((error) => {
+        if(error.response && error.response.status === 404){
+          console.error('No group found with name %s, cant fetch subgroups: %s',groupName, error.message);
+          throw new Error(`No group found with name ${groupName}, cant fetch subgroups`);
+        }
+        console.error('Error while fetching subgroups for GitLab group %s: %s',groupName, error.message);
+        throw new Error(`Error while fetching subgroups for GitLab group ${groupName}`);
       });
-    }
+  }
 
-  this._getRequestOptions = function (method, path) {
+  this._getParams = function (method, path) {
     return {
-      host: this.url,
-      port: 443,
-      path: "/api/v4" + path,
+      url: `https://${this.url}/api/v4${path}`,
       method: method,
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'gl2h',
         'Private-Token': this.privateToken
       }
     };

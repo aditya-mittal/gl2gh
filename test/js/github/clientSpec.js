@@ -14,23 +14,21 @@ describe('Github client', function() {
   const GITHUB_PRIVATE_TOKEN = "some_private_token"
   const githubClient = new GithubClient(GITHUB_API_URL, GITHUB_PRIVATE_TOKEN)
   let api
-  describe('#createRepo', function() {
-    beforeEach(() => {
-      api = nock(
-              'https://' + GITHUB_API_URL, {
-                reqHeaders: {
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'gl2h',
-                  'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-                }
+  beforeEach(() => {
+    api = nock(
+            'https://' + GITHUB_API_URL, {
+              reqHeaders: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'gl2h',
+                'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
               }
-            )
-    });
-
-    afterEach(() => {
-      nock.cleanAll()
-    });
-
+            }
+          )
+  });
+  afterEach(() => {
+    nock.cleanAll()
+  });
+  describe('#createRepo', function() {
     it('should create new repo', async() => {
       //given
       const repoName = "some-repo"

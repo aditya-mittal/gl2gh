@@ -25,16 +25,16 @@ function GithubClient(url, privateToken) {
   }
 
   this._getParams = function (method, path) {
-      return {
-        url: `https://${this.url}${path}`,
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'gl2h',
-          'Authorization': 'Bearer ' + this.privateToken
-        }
-      };
-    }
+    return {
+      url: `https://${this.url}${path}`,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'gl2h',
+        'Authorization': 'Bearer ' + this.privateToken
+      }
+    };
+  }
 }
 
 module.exports = GithubClient;
