@@ -2,7 +2,7 @@ const path = require('path');
 var GitlabClient = require('./gitlab/client.js');
 var GithubClient = require('./github/client.js');
 var Project = require('./gitlab/model/project.js');
-var GitClient = require('./isomorphicGitClient.js');
+var GitClient = require('./gitClient.js');
 var config = require('./config.js');
 
 function Migrate() {

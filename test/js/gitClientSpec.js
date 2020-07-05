@@ -6,7 +6,7 @@ const path = require('path')
 const git = require('isomorphic-git')
 const http = require('isomorphic-git/http/node')
 const fs = require('fs')
-var GitClient = require('../../src/isomorphicGitClient.js');
+var GitClient = require('../../src/gitClient.js');
 
 describe('Git', function() {
   var gitClient = new GitClient()
