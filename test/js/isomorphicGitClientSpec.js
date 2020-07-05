@@ -33,7 +33,7 @@ describe('Git', function() {
       expect(cloneStub.called).to.equal(true)
     });
 
-    it.only('should handle error when cloning the repo', async function() {
+    it('should handle error when cloning the repo', async function() {
       //given
       var https_url_to_repo = "https://github.com/some-repo.git"
       var repo_name = "some-repo"

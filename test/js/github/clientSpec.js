@@ -1,21 +1,26 @@
-var assert = require('assert');
-var should = require('chai').should();
-var nock = require('nock');
-var GithubClient = require('../../../src/github/client.js');
-var Repository = require('../../../src/github/model/repository.js');
-var repoDetails = require('../../resources/github/repoDetails.json')
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised);
+const assert = chai.assert;
+const expect = chai.expect
+const should = require('chai').should();
+const nock = require('nock');
+const GithubClient = require('../../../src/github/client.js');
+const Repository = require('../../../src/github/model/repository.js');
+const repoDetails = require('../../resources/github/repoDetails.json')
 
 describe('Github client', function() {
-  var GITHUB_API_URL = "api.github.com"
-  var GITHUB_PRIVATE_TOKEN = "some_private_token"
-  var api
-  var githubClient = new GithubClient(GITHUB_API_URL, GITHUB_PRIVATE_TOKEN)
+  const GITHUB_API_URL = "api.github.com"
+  const GITHUB_PRIVATE_TOKEN = "some_private_token"
+  const githubClient = new GithubClient(GITHUB_API_URL, GITHUB_PRIVATE_TOKEN)
+  let api
   describe('#createRepo', function() {
     beforeEach(() => {
       api = nock(
-              'https://api.github.com', {
+              'https://' + GITHUB_API_URL, {
                 reqHeaders: {
                   'Content-Type': 'application/json',
+                  'User-Agent': 'gl2h',
                   'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
                 }
               }
@@ -28,17 +33,18 @@ describe('Github client', function() {
 
     it('should create new repo', async() => {
       //given
-      var repoName = "some-repo"
-      var isPrivate = true
+      const repoName = "some-repo"
+      const isPrivate = true
       api.post('/user/repos/').reply(201, repoDetails);
       //when
-      var repository = await githubClient.createRepo(repoName, isPrivate)
+      const repository = await githubClient.createRepo(repoName, isPrivate)
       //then
       try {
         repository.should.be.a('object');
         repository.should.be.instanceof(Repository);
-        repository.should.have.property('name')
-        repository.should.have.property('clone_url')
+        repository.should.have.property('name');
+        repository.should.have.property('clone_url');
+        repository.should.have.property('delete_branch_on_merge');
         repository['name'].should.equal(repoName)
       } catch(err) {
         throw err
@@ -46,33 +52,27 @@ describe('Github client', function() {
     });
     it('should throw error when non 201 status received while creating repo', async() => {
       //given
-      var repoName = "errored-repo"
-      var isPrivate = true
+      const repoName = "errored-repo"
+      const isPrivate = true
       api.post('/user/repos/').reply(404);
-      //when
-      try {
-        await githubClient.createRepo(repoName, isPrivate)
-        // a failing assert here is a bad idea, since it would lead into the catch clause…
-      } catch (err) {
-        // optional, check for specific error (or error.type, error. message to contain …)
-        assert.deepEqual(err, { 'message': `Unable to create repo with name ${repoName}` })
-        return  // this is important
-      }
+      //when & then
+      return assert.isRejected(
+                      githubClient.createRepo(repoName, isPrivate),
+                      Error,
+                      'Unable to create repo: error'
+                    );
     });
     it('should throw error when error obtained while creating repo', async() => {
       //given
-      var repoName = "error"
-      var isPrivate = true
+      const repoName = "error"
+      const isPrivate = true
       api.post('/user/repos/').replyWithError('some error occurred while creating repo');
-      //when
-      try {
-        await githubClient.createRepo(repoName, isPrivate)
-        // a failing assert here is a bad idea, since it would lead into the catch clause…
-      } catch (err) {
-        // optional, check for specific error (or error.type, error. message to contain …)
-        assert.deepEqual(err, { 'message': 'Error while creating repo' })
-        return  // this is important
-      }
+      //when & then
+      return assert.isRejected(
+                            githubClient.createRepo(repoName, isPrivate),
+                            Error,
+                            'Unable to create repo: error'
+                          );
     });
   });
 });
