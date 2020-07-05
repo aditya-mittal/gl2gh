@@ -1,3 +1,4 @@
 .idea
 node_modules
 test_report.xml
+config/default.yml
