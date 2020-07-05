@@ -53,6 +53,6 @@ $ npm unlink
 - Copy the generated token
 
 ### Creating a private token for GitLab
-- Navigate to your [GitLab Personal access tokens](https://gitlab.et-scm.com/profile/personal_access_tokens)
+- Navigate to your [GitLab Personal access tokens](https://gitlab.com/profile/personal_access_tokens)
 - Choose a name and expiry date, and choose scope: `api`
 - Copy the generated token
