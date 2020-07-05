@@ -1,0 +1,9 @@
+gl2h:
+  gitlab:
+    url: gitlab.com
+    username: your_gitlab_username
+    token: your_gitlab_private_token
+  github:
+    url: api.github.com
+    username: your_github_username
+    token: your_github_token

@@ -7,7 +7,6 @@ Migrate one or more projects from GitLab to GitHub.
 
 - Obtain a GitLab private token as prescribed [here](./README.md#creating-a-private-token-for-gitlab)
 - Obtain a GitHub private token as prescribed [here](./README.md#creating-a-private-token-for-github)
-- Configure tokens, URLs, etc. for GitLab and Github [here](config/default.yml)
 
 ```bash
 # Example current versions, also known to work with earlier versions
@@ -22,6 +21,17 @@ $ npm install
 
 # Link binary
 $ npm link
+
+# set config
+$ cp config/example.yml /tmp/production.yml
+# update the config with appropriate values
+# Set config directory path
+$ export NODE_CONFIG_DIR="/tmp"
+# set appropriate config environment
+$ export NODE_CONFIG_ENV="production"
+
+# Set appropriate config env
+$ export NODE_CONFIG_ENV="your_config_file_name"
 
 # See usage
 $ gl2h -h
