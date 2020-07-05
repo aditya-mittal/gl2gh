@@ -1,0 +1,9 @@
+gl2h:
+  gitlab:
+    url: mock.gitlab.com
+    username: mittala
+    token: some_private_token
+  github:
+    url: mock.api.github.com
+    username: aditya-mittal
+    token: some_private_token

@@ -1,0 +1,9 @@
+gl2h:
+  gitlab:
+    url: gitlab.com
+    username: mittala
+    token: some_token
+  github:
+    url: api.github.com
+    username: aditya-mittal
+    token: some_token

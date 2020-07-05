@@ -1,17 +1,19 @@
 const path = require('path');
-var GitlabClient = require('./gitlab/client.js');
-var GithubClient = require('./github/client.js');
-var Project = require('./gitlab/model/project.js');
-var GitClient = require('./gitClient.js');
-var config = require('./config.js');
+const _ = require('lodash');
+const config = require('config');
+
+const GitlabClient = require('./gitlab/client.js');
+const GithubClient = require('./github/client.js');
+const Project = require('./gitlab/model/project.js');
+const GitClient = require('./gitClient.js');
 
 function Migrate() {
-  var gitClient = new GitClient()
-  var gitlabClient = new GitlabClient(config.GITLAB_URL, config.GITLAB_TOKEN)
-  var githubClient = new GithubClient(config.GITHUB_URL, config.GITHUB_TOKEN)
+  const gitClient = new GitClient(config.get('gl2h.gitlab.username'), config.get('gl2h.gitlab.token'), config.get('gl2h.github.token'));
+  const gitlabClient = new GitlabClient(config.get('gl2h.gitlab.url'), config.get('gl2h.gitlab.token'))
+  const githubClient = new GithubClient(config.get('gl2h.github.url'), config.get('gl2h.github.token'))
 
   this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
-    var projects = [];
+    let projects = [];
     try {
       projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
       projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
@@ -23,18 +25,36 @@ function Migrate() {
     }
   };
 
+  this.getListOfAllProjectsToMigrate = async function (gitlabGroupName, projectNameFilter) {
+    let projects = [];
+    try {
+      projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
+      projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
+      projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
+      projects = _.sortBy(projects, "name");
+      projects = _filterProjectsWithPrefix(projects, projectNameFilter)
+      return projects;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  var _filterProjectsWithPrefix = function (projects, prefix) {
+    return projects.filter(project => project.startsWith(prefix))
+  }
+
   var _getProjectsWithinGroup = async function(gitlabGroupName) {
     return gitlabClient.getGroup(gitlabGroupName)
       .then(group => group.getProjects())
   }
 
   var _getProjectsForAllSubgroups = async function(gitlabGroupName) {
-    var subgroups = await gitlabClient.getSubgroups(gitlabGroupName);
+    let subgroups = await gitlabClient.getSubgroups(gitlabGroupName);
     const promises = subgroups.map((subgroup) => {
                       return _getProjectsForSubgroup(gitlabGroupName, subgroup.name)
                     });
-    var projectsForEachSubgroup = await Promise.all(promises)
-    return projectsForEachSubgroup.flat();
+    let projectsForEachSubgroup = await Promise.all(promises)
+    return [].concat(...projectsForEachSubgroup);
   }
 
   var _getProjectsForSubgroup = async function(gitlabGroupName, subgroupName) {

@@ -1,15 +1,15 @@
-var should = require('chai').should();
-var Group = require('../../../../src/gitlab/model/group.js');
-var Project = require('../../../../src/gitlab/model/project.js');
-var groupDetails = require('../../../resources/gitlab/groupDetails.json')
+const should = require('chai').should();
+const Group = require('../../../../src/gitlab/model/group.js');
+const Project = require('../../../../src/gitlab/model/project.js');
+const groupDetails = require('../../../resources/gitlab/groupDetails.json')
 
 describe('Group', function() {
   describe('#getProjects()', function() {
     it('should return list of all projects', function() {
       //given
-      var group = new Group(groupDetails)
+      const group = new Group(groupDetails)
       //when
-      var projectList = group.getProjects()
+      const projectList = group.getProjects()
       //then
       projectList.should.be.an('array');
       projectList.should.have.lengthOf(3);
@@ -17,12 +17,13 @@ describe('Group', function() {
       projectList[0].should.be.instanceof(Project);
       projectList[0].should.have.property('name')
       projectList[0].should.have.property('http_url_to_repo')
+      projectList[0].should.have.property('description')
     });
     it('should return list of all shared projects', function() {
       //given
-      var group = new Group(groupDetails)
+      const group = new Group(groupDetails)
       //when
-      var projectList = group.getSharedProjects()
+      const projectList = group.getSharedProjects()
       //then
       projectList.should.be.an('array');
       projectList.should.have.lengthOf(1);
@@ -30,6 +31,7 @@ describe('Group', function() {
       projectList[0].should.be.instanceof(Project);
       projectList[0].should.have.property('name')
       projectList[0].should.have.property('http_url_to_repo')
+      projectList[0].should.have.property('description')
     });
   });
 });
