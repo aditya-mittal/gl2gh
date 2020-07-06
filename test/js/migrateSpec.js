@@ -36,9 +36,13 @@ describe('migrate', function() {
   let gitCloneStub
   let gitCreateRemoteStub
   let gitPushToRemoteStub
-  before(() => {
+  let gitListBranchesStub
+  let gitCheckoutStub
+  beforeEach(() => {
     gitCloneStub = sinon.stub(git, 'clone');
     gitCreateRemoteStub = sinon.stub(git, 'addRemote');
+    gitListBranchesStub = sinon.stub(git, 'listBranches');
+    gitCheckoutStub = sinon.stub(git, 'checkout');
     gitPushToRemoteStub = sinon.stub(git, 'push');
     gitlabApi = nock(
                         'https://' + GITLAB_URL, {
@@ -47,7 +51,7 @@ describe('migrate', function() {
                             'Private-Token': GITLAB_PRIVATE_TOKEN
                           }
                         }
-                      )
+                      );
     githubApi = nock(
                   'https://' + GITHUB_API_URL, {
                     reqHeaders: {
@@ -55,9 +59,9 @@ describe('migrate', function() {
                       'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
                     }
                   }
-                )
+                );
   });
-  after(() => {
+  afterEach(() => {
     sinon.restore();
     nock.cleanAll();
   });
@@ -73,21 +77,19 @@ describe('migrate', function() {
       githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve());
       gitCreateRemoteStub.returns(Promise.resolve());
+      gitListBranchesStub.returns(Promise.resolve(["master", "extra-branch"]));
+      gitCheckoutStub.returns(Promise.resolve());
       gitPushToRemoteStub.returns(Promise.resolve());
       //when
-      try {
-        var result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
-        //then
-        result.valueOf(() => {
-          sinon.assert.callCount(gitCloneStub, 8)
-          sinon.assert.callCount(gitCreateRemoteStub, 8)
-          sinon.assert.callCount(gitPushToRemoteStub, 8)
-        });
-      } catch (err) {
-        throw err;
-      }
+      const result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName);
+      //then
+      expect(result).to.equal(0);
+      sinon.assert.callCount(gitCloneStub, 8);
+      sinon.assert.callCount(gitCreateRemoteStub, 8);
+      sinon.assert.callCount(gitListBranchesStub, 8);
+      sinon.assert.callCount(gitCheckoutStub, 16);
+      sinon.assert.callCount(gitPushToRemoteStub, 16);
     });
-
     it('should handle error gracefully when details for gitlab group not found', async () =>  {
       //given
       const gitlabGroupName = "FOO"

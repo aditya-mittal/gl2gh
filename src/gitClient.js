@@ -8,21 +8,31 @@ function GitClient(gitlabUserName, gitlabToken, githubToken) {
   this.gitlabToken = gitlabToken;
   this.githubToken = githubToken;
 
-  this.clone = function(https_url_to_repo, repo_name, path_to_clone_repo) {
-    console.log('***********git clone called*****************')
-    return git.clone({fs, http, path_to_clone_repo, url: https_url_to_repo})
-  }
-
-  this.addRemote = function(repo_path_on_local, remote_name, https_remote_url) {
-    console.log('***********git addRemote called*****************')
-    return git.addRemote({fs, dir: repo_path_on_local, remote: remote_name, url: https_remote_url})
-  }
-
-  this.push = function(repo_path_on_local, remote_name, branch_name) {
-    console.log('***********git push called*****************')
-    return git.push({fs, http, dir: repo_path_on_local, remote: remote_name,
-                      ref: branch_name, onAuth: () => ({ username: this.githubToken })
+  this.clone = function(httpsRemoteUrl, pathToCloneRepo, remoteName) {
+    return git.clone({ fs, http, dir: pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName,
+                        onAuth: () => ({ username: this.gitlabUserName, password: this.gitlabToken }),
+                        onAuthFailure: () => {console.error("Cant authenticate with GitLab")}
                       })
+  }
+
+  this.addRemote = function(repoPathOnLocal, remoteName, httpsRemoteUrl) {
+    return git.addRemote({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl})
+  }
+
+  this.listBranches = async function(repoPathOnLocal, remoteName) {
+    const branches = await git.listBranches({fs, dir: repoPathOnLocal, remote: remoteName})
+    const filteredBranches = branches.filter(branch => branch !== 'HEAD')
+    for (const branch of filteredBranches) {
+      await git.checkout({fs, dir: repoPathOnLocal, ref: branch})
+    }
+    return filteredBranches
+  }
+
+  this.push = function(repoPathOnLocal, remoteName, branchName) {
+    return git.push({fs, http, dir: repoPathOnLocal, remote: remoteName,
+                      ref: branchName, onAuth: () => ({ username: this.githubToken }),
+                      onAuthFailure: () => {console.error("Cant authenticate with GitHub")}
+                    })
   };
 }
 

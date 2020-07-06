@@ -18,7 +18,7 @@ function Migrate() {
       projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
       projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
       projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
-      _migrateProjectsToGithub(projects);
+      await _migrateProjectsToGithub(projects);
       return 0;
     } catch(error) {
       return -1;
@@ -73,15 +73,25 @@ function Migrate() {
   }
 
   var _migrateProjectToGithub = async function(project, index) {
-       await githubClient.createRepo(project.name, true)
-                            .then(githubRepository => _cloneAndPushToNewRemote(githubRepository, project))
+     return githubClient.createRepo(project.name, true)
+                          .then(githubRepository => _cloneAndPushToNewRemote(githubRepository, project))
   };
 
   var _cloneAndPushToNewRemote = async function(githubRepository, project) {
+    const sourceRemoteName = 'gitlab';
+    const destinationRemoteName = 'github';
     const path_to_clone_repo = path.join(process.cwd(), '/tmp','migrate', project.name)
-    await gitClient.clone(project.http_url_to_repo, project.name, path_to_clone_repo)
-          .then(() => gitClient.addRemote(path_to_clone_repo, 'github', githubRepository.clone_url))
-          .then(() => gitClient.push(path_to_clone_repo, 'github', 'master'));
+    await gitClient.clone(project.http_url_to_repo, path_to_clone_repo, sourceRemoteName)
+    await gitClient.addRemote(path_to_clone_repo, destinationRemoteName, githubRepository.clone_url)
+    const branches = await gitClient.listBranches(path_to_clone_repo, sourceRemoteName)
+    const promises = branches.map((branch) => {
+      return gitClient.push(path_to_clone_repo, destinationRemoteName, branch)
+                        .catch((err) => {
+                          let msg = `Error pushing branch ${branch} of ${project.name}: ${err.message}`;
+                          console.warn(msg);
+                        });
+    });
+    return Promise.all(promises);
   }
 };
 
