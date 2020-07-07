@@ -34,23 +34,23 @@ $ export NODE_CONFIG_ENV="production"
 $ export NODE_CONFIG_ENV="your_config_file_name"
 
 # See usage
-$ gl2h -h
+$ gl2gh -h
 ```
 
 ### List all projects under GitLab
 
 ```bash
-$ gl2h list my-foo-group
-$ gl2h list --starts-with my-foo-repo my-foo-group
-$ gl2h list -n 10 my-foo-group # n is defaulted to 50
-$ gl2h list --output text my-foo-group # output is defaulted to json
+$ gl2gh list my-foo-group
+$ gl2gh list --starts-with my-foo-repo my-foo-group
+$ gl2gh list -n 10 my-foo-group # n is defaulted to 50
+$ gl2gh list --output text my-foo-group # output is defaulted to json
 ```
 
 ### Copy content from GitLab to GitHub
 
 ```bash
-$ gl2h copy-content my-foo-group my-bar-org
-$ gl2h copy-content --starts-with my-repo my-foo-group my-bar-org
+$ gl2gh copy-content my-foo-group my-bar-org
+$ gl2gh copy-content --starts-with my-repo my-foo-group my-bar-org
 ```
 
 ### Clean up

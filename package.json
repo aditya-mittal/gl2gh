@@ -1,10 +1,10 @@
 {
-  "name": "migrate-repo",
+  "name": "gl2gh",
   "version": "1.0.0",
-  "description": "Migrates Gitlab repo(s) to Github",
+  "description": "Migrates GitLab repo(s) to GitHub",
   "main": "cli.js",
   "bin": {
-    "gl2h": "./src/cli.js"
+    "gl2gh": "./src/cli.js"
   },
   "scripts": {
     "start": "node src/main.js",
@@ -15,7 +15,7 @@
   "author": "aditya-mittal",
   "repository": {
     "type": "git",
-    "url": "git@github.com:aditya-mittal/migrate-gitlab-repo-to-github.git"
+    "url": "git@github.com:aditya-mittal/gl2gh.git"
   },
   "license": "ISC",
   "devDependencies": {
