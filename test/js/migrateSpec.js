@@ -96,12 +96,9 @@ describe('migrate', function() {
       const githubOrgName = "BAR"
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName).reply(404);
       //when
-      try {
-        await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
-      } catch(err) {
-        assert.deepEqual(err, { 'message': `No group found with name ${gitlabGroupName}` })
-        return
-      }
+      const result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName)
+      //then
+      expect(result).to.equal(1);
     });
   });
   describe('list gitlab repo(s) to migrate', function () {
@@ -153,6 +150,61 @@ describe('migrate', function() {
         migrate.getListOfAllProjectsToMigrate(gitlabGroupName, projectNameFilter),
         Error,
         `No group found with name ${gitlabGroupName}`);
+    });
+  });
+  describe('copyContent', function () {
+    it('should copy content of all repos from gitlab to github', async () => {
+      //given
+      const gitlabGroupName = "FOO"
+      const githubOrgName = "BAR"
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
+      gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
+      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
+      gitCloneStub.returns(Promise.resolve());
+      gitCreateRemoteStub.returns(Promise.resolve());
+      gitListBranchesStub.returns(Promise.resolve(["master"]));
+      gitCheckoutStub.returns(Promise.resolve());
+      gitPushToRemoteStub.returns(Promise.resolve());
+
+      //when
+      const result = await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName);
+
+      //then
+      expect(result).to.equal(0);
+      sinon.assert.callCount(gitCloneStub, 8);
+      sinon.assert.callCount(gitCreateRemoteStub, 8);
+      sinon.assert.callCount(gitListBranchesStub, 8);
+      sinon.assert.callCount(gitCheckoutStub, 8);
+      sinon.assert.callCount(gitPushToRemoteStub, 8);
+    });
+    it('should copy content of only those repos matching the filter', async () => {
+      //given
+      const gitlabGroupName = "FOO";
+      const githubOrgName = "BAR";
+      const projectNameFilter = "repository-"
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName + '/subgroups').reply(200, gitlabSubgroupsList);
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent("/") + 'subgroup1').reply(200, gitlabSubgroup1Details);
+      gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent("/") + 'subgroup2').reply(200, gitlabSubgroup2Details);
+      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
+      gitCloneStub.returns(Promise.resolve());
+      gitCreateRemoteStub.returns(Promise.resolve());
+      gitListBranchesStub.returns(Promise.resolve(["master"]));
+      gitCheckoutStub.returns(Promise.resolve());
+      gitPushToRemoteStub.returns(Promise.resolve());
+
+      //when
+      const result = await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, projectNameFilter);
+
+      //then
+      expect(result).to.equal(0);
+      sinon.assert.callCount(gitCloneStub, 3);
+      sinon.assert.callCount(gitCreateRemoteStub, 3);
+      sinon.assert.callCount(gitListBranchesStub, 3);
+      sinon.assert.callCount(gitCheckoutStub, 3);
+      sinon.assert.callCount(gitPushToRemoteStub, 3);
     });
   });
 });

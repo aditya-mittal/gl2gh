@@ -46,6 +46,13 @@ $ gl2h list -n 10 my-foo-group # n is defaulted to 50
 $ gl2h list --output text my-foo-group # output is defaulted to json
 ```
 
+### Copy content from GitLab to GitHub
+
+```bash
+$ gl2h copy-content my-foo-group my-bar-org
+$ gl2h copy-content --starts-with my-repo my-foo-group my-bar-org
+```
+
 ### Clean up
 
 After successful migration, this will clean up installed binary for migration.

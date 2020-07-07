@@ -15,13 +15,24 @@ function Migrate() {
   this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
     let projects = [];
     try {
-      projects.push(... await _getProjectsWithinGroup(gitlabGroupName))
-      projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
-      projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
+      projects.push(... await _getProjectsWithinGroup(gitlabGroupName));
+      projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName));
+      projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName));
       await _migrateProjectsToGithub(projects);
       return 0;
     } catch(error) {
-      return -1;
+      return 1;
+    }
+  };
+
+  this.copyContentFromGitlabToGithub = async function(gitlabGroupName, githubOrgName, projectNameFilter = '') {
+    try {
+      let projects = await this.getListOfAllProjectsToMigrate(gitlabGroupName, projectNameFilter);
+      await _copyContentForProjects(projects, githubOrgName);
+      return 0;
+    } catch (error) {
+      console.error(error);
+      return 1;
     }
   };
 
@@ -32,16 +43,26 @@ function Migrate() {
       projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName))
       projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName))
       projects = _.sortBy(projects, "name");
-      projects = _filterProjectsWithPrefix(projects, projectNameFilter)
+      projects = _filterProjectsWithPrefix(projects, projectNameFilter);
       return projects;
     } catch (error) {
       throw error;
     }
   };
 
-  var _filterProjectsWithPrefix = function (projects, prefix) {
-    return projects.filter(project => project.startsWith(prefix))
+  var _migrateProjectsToGithub = function(projects, githubOrgName) {
+    return _copyContentForProjects(projects, githubOrgName);
   }
+  var _copyContentForProjects = async function(projects, githubOrgName) {
+    const promises = projects.map(project => _copyContent(project, githubOrgName));
+    return await Promise.all(promises)
+                    .catch((err) => console.error(err.message));
+  };
+
+  var _copyContent = function(project, githubOrgName) {
+    return githubClient.createRepo(project.name, true)
+      .then((githubRepository) => _cloneAndPushToNewRemote(githubRepository, project))
+  };
 
   var _getProjectsWithinGroup = async function(gitlabGroupName) {
     return gitlabClient.getGroup(gitlabGroupName)
@@ -67,32 +88,26 @@ function Migrate() {
       .then(group => group.getSharedProjects())
   }
 
-  var _migrateProjectsToGithub = async function(projects) {
-    const promises = projects.map(_migrateProjectToGithub);
-    return await Promise.all(promises);
-  }
-
-  var _migrateProjectToGithub = async function(project, index) {
-     return githubClient.createRepo(project.name, true)
-                          .then(githubRepository => _cloneAndPushToNewRemote(githubRepository, project))
-  };
-
   var _cloneAndPushToNewRemote = async function(githubRepository, project) {
     const sourceRemoteName = 'gitlab';
     const destinationRemoteName = 'github';
-    const path_to_clone_repo = path.join(process.cwd(), '/tmp','migrate', project.name)
-    await gitClient.clone(project.http_url_to_repo, path_to_clone_repo, sourceRemoteName)
-    await gitClient.addRemote(path_to_clone_repo, destinationRemoteName, githubRepository.clone_url)
-    const branches = await gitClient.listBranches(path_to_clone_repo, sourceRemoteName)
+    const pathToCloneRepo = path.join(process.cwd(), '/tmp','migrate', project.name)
+    await gitClient.clone(project.http_url_to_repo, pathToCloneRepo, sourceRemoteName)
+    await gitClient.addRemote(pathToCloneRepo, destinationRemoteName, githubRepository.clone_url)
+    const branches = await gitClient.listBranches(pathToCloneRepo, sourceRemoteName)
     const promises = branches.map((branch) => {
-      return gitClient.push(path_to_clone_repo, destinationRemoteName, branch)
+      return gitClient.push(pathToCloneRepo, destinationRemoteName, branch)
                         .catch((err) => {
                           let msg = `Error pushing branch ${branch} of ${project.name}: ${err.message}`;
                           console.warn(msg);
                         });
     });
     return Promise.all(promises);
-  }
+  };
+
+  var _filterProjectsWithPrefix = function (projects, prefix) {
+    return projects.filter(project => project.startsWith(prefix))
+  };
 };
 
 module.exports = Migrate;

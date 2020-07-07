@@ -19,6 +19,13 @@ program
     await listProjects(gitlabGroupName, cmdObj.number, cmdObj.startsWith, cmdObj.output)
   });
 
+program.command('copy-content <gitlab-group-name> <github-org-name>')
+  .description('Copy content of repositories from GitLab to GitHub')
+  .option('--starts-with <prefix>', 'Filter projects starting with specified prefix', '')
+  .action( async (gitlabGroupName, githubOrgName, cmdObj) => {
+    await copyContent(gitlabGroupName, githubOrgName, cmdObj.startsWith);
+  });
+
 program.parse(process.argv);
 
 async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter, outputType) {
@@ -28,6 +35,11 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
   } catch(error) {
     console.error(error.message)
   }
+}
+
+async function copyContent(gitlabGroupName, githubOrgName, projectNameFilter) {
+  migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, projectNameFilter)
+        .catch((err) => logger.error(err.message))
 }
 
 function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType) {
