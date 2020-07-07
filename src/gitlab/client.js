@@ -7,7 +7,7 @@ function GitlabClient(url, privateToken) {
   this.privateToken = privateToken
 
   this.getGroup = function(groupName) {
-    const path = '/groups/' + groupName;
+    const path = 'groups/' + groupName;
     const params = this._getParams('GET', path)
 
     return axios(params)
@@ -25,7 +25,7 @@ function GitlabClient(url, privateToken) {
   }
 
   this.getSubgroup = function(groupName, subgroupName) {
-    const path = `/groups/${groupName}${encodeURIComponent("/")}${subgroupName}`
+    const path = `groups/${groupName}${encodeURIComponent("/")}${subgroupName}`
     const params = this._getParams('GET', path)
 
     return axios(params)
@@ -44,7 +44,7 @@ function GitlabClient(url, privateToken) {
   }
 
   this.getSubgroups = function(groupName) {
-    const path = `/groups/${groupName}/subgroups`;
+    const path = `groups/${groupName}/subgroups`;
     const params = this._getParams('GET', path)
 
     return axios(params)
@@ -67,11 +67,11 @@ function GitlabClient(url, privateToken) {
 
   this._getParams = function (method, path) {
     return {
-      url: `https://${this.url}/api/v4${path}`,
+      url: `https://${this.url}/api/v4/${path}`,
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'gl2h',
+        'User-Agent': 'gl2gh',
         'Private-Token': this.privateToken
       }
     };

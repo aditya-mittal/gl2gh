@@ -6,7 +6,7 @@ function GithubClient(url, privateToken) {
   this.privateToken = privateToken
 
   this.createRepo = function (repoName, isPrivate) {
-    const path = '/user/repos/';
+    const path = 'user/repos';
     const data = {
       "name": repoName,
       "private": isPrivate
@@ -26,12 +26,12 @@ function GithubClient(url, privateToken) {
 
   this._getParams = function (method, path) {
     return {
-      url: `https://${this.url}${path}`,
+      url: `https://${this.url}/${path}`,
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'gl2h',
-        'Authorization': 'Bearer ' + this.privateToken
+        'User-Agent': 'gl2gh',
+        'Authorization': 'token ' + this.privateToken
       }
     };
   }
