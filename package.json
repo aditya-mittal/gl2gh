@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node src/main.js",
     "test": "mocha --recursive --require test/js/util/mochaHelper.js",
+    "pretest": "eslint --ignore-path .gitignore --fix .",
     "test-watch": "mocha --recursive --require test/js/util/mochaHelper.js -w",
     "test-jenkins": "JUNIT_REPORT_PATH=./test_report.xml mocha --recursive --require test/js/util/mochaHelper.js --colors --reporter mocha-jenkins-reporter",
     "build": "npm install && npm link"
@@ -22,6 +23,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^7.4.0",
     "mocha": "^7.1.2",
     "mocha-jenkins-reporter": "^0.4.3",
     "nock": "^12.0.3",
