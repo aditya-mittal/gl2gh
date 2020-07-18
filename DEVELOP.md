@@ -13,6 +13,16 @@ $ npm install
 $ npm test
 ```
 
+### Run eslint
+```bash
+$ npm lint
+```
+
+### Run eslint that fixes the common problems
+```bash
+$ npm lint:fix
+```
+
 ### Run the tests in watch mode
 ```bash
 $ npm run test-watch
