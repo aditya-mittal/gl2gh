@@ -6,6 +6,7 @@ const GitlabClient = require('./gitlab/client.js');
 const GithubClient = require('./github/client.js');
 const Project = require('./gitlab/model/project.js');
 const GitClient = require('./gitClient.js');
+const GithubBranchProtectionRule = require('./github/model/branchProtectionRule.js');
 
 function Migrate() {
   const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
@@ -48,6 +49,14 @@ function Migrate() {
     } catch (error) {
       throw error;
     }
+  };
+
+  this.configureBranchProtectionRule = function(owner, repoName, branchName, rules) {
+    return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
+      .catch((error) => {
+        logger.error(error.message);
+        errorSummary.push(error.message);
+      });
   };
 
   var _migrateProjectsToGithub = function(projects, githubOrgName) {

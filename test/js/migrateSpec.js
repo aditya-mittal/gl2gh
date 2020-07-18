@@ -22,6 +22,7 @@ const gitlabGroupDetails = require('../resources/gitlab/groupDetails.json')
 const gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json')
 const gitlabSubgroup1Details = require('../resources/gitlab/subgroup1Details.json')
 const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.json')
+const updateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json')
 
 describe('migrate', function() {
   const migrate = new Migrate()
@@ -207,4 +208,48 @@ describe('migrate', function() {
       sinon.assert.callCount(gitPushToRemoteStub, 3);
     });
   });
+  describe('configure branch protection rules for github repo', function () {
+      beforeEach(() => {
+        githubApi = nock(
+                'https://' + GITHUB_API_URL, {
+                  reqHeaders: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
+                  }
+                }
+              )
+      });
+
+      afterEach(() => {
+        nock.cleanAll()
+      });
+      it('should configure branch protection rule for given github repo', async () => {
+        //given
+        const owner = 'some-org'
+        const repoName = 'some-repo'
+        const branchName = 'master'
+        const required_status_checks_contexts = [
+          "continuous-integration/jenkins/pr-merge",
+          "continuous-integration/jenkins/branch"
+        ];
+        const required_approving_review_count = 1
+        const dismiss_stale_reviews = true;
+        const enforce_admins = true;
+        const rules = {
+                        "required_status_checks_contexts": required_status_checks_contexts,
+                        "required_approving_review_count": required_approving_review_count,
+                        "dismiss_stale_reviews": dismiss_stale_reviews,
+                        "enforce_admins": enforce_admins
+                      };
+        githubApi.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+        //when
+        const res = await migrate.configureBranchProtectionRule(owner, repoName, branchName, rules)
+        //then
+        expect(res.status).to.equal(200)
+        expect(res.data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts)
+        expect(res.data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count)
+        expect(res.data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews)
+        expect(res.data.enforce_admins.enabled).to.equal(enforce_admins);
+      });
+    });
 });

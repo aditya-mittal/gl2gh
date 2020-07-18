@@ -9,7 +9,9 @@ const config = require('config');
 
 const GithubClient = require('../../../src/github/client.js');
 const Repository = require('../../../src/github/model/repository.js');
+const BranchProtectionRule = require('../../../src/github/model/branchProtectionRule.js');
 const repoDetails = require('../../resources/github/repoDetails.json')
+const updateBranchProtectionResponse = require('../../resources/github/updateBranchProtectionResponse.json')
 
 describe('Github client', function() {
   const GITHUB_API_URL = config.get('gl2gh.github.url')
@@ -73,6 +75,75 @@ describe('Github client', function() {
                             Error,
                             'Unable to create repo: error'
                           );
+    });
+  });
+  describe('#configureBranchProtectionRule', function () {
+    beforeEach(() => {
+      api = nock(
+              'https://' + GITHUB_API_URL, {
+                reqHeaders: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
+                }
+              }
+            )
+    });
+
+    afterEach(() => {
+      nock.cleanAll()
+    });
+    it('should configure branch protection rule for the repo', async () => {
+      //given
+      const owner = 'some-org'
+      const repoName = 'some-repo'
+      const branchName = 'master'
+      const required_status_checks_contexts = [
+        "continuous-integration/jenkins/pr-merge",
+        "continuous-integration/jenkins/branch"
+      ];
+      const required_approving_review_count = 1
+      const dismiss_stale_reviews = true;
+      const enforce_admins = true;
+      const rules = {
+                      "required_status_checks_contexts": required_status_checks_contexts,
+                      "required_approving_review_count": required_approving_review_count,
+                      "dismiss_stale_reviews": dismiss_stale_reviews,
+                      "enforce_admins": enforce_admins
+                    };
+      api.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+      //when
+      const res = await githubClient.configureBranchProtectionRule(owner, repoName, branchName, new BranchProtectionRule(rules))
+      //then
+      expect(res.status).to.equal(200)
+      expect(res.data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts)
+      expect(res.data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count)
+      expect(res.data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews)
+      expect(res.data.enforce_admins.enabled).to.equal(enforce_admins);
+    });
+    it('should throw error when non 200 response obtained while configure branch protection rule for the repo', async () => {
+      //given
+      const owner = 'some-org'
+      const repoName = 'some-repo'
+      const branchName = 'master'
+      const required_status_checks_contexts = [
+        "continuous-integration/jenkins/pr-merge",
+        "continuous-integration/jenkins/branch"
+      ];
+      const required_approving_review_count = 1
+      const dismiss_stale_reviews = true;
+      const enforce_admins = true;
+      const rules = {
+                      "required_status_checks_contexts": required_status_checks_contexts,
+                      "required_approving_review_count": required_approving_review_count,
+                      "dismiss_stale_reviews": dismiss_stale_reviews,
+                      "enforce_admins": enforce_admins
+                    };
+      api.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(415);
+      //when & then
+      return assert.isRejected(
+                  githubClient.configureBranchProtectionRule(owner, repoName, branchName, new BranchProtectionRule(rules)),
+                  Error,
+                  "Error configuring branch protection rule on " +branchName+ " of " +repoName);
     });
   });
 });
