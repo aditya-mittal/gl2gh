@@ -5,13 +5,15 @@ const assert = chai.assert;
 const expect = chai.expect
 const should = require('chai').should();
 const nock = require('nock');
+const config = require('config');
+
 const GithubClient = require('../../../src/github/client.js');
 const Repository = require('../../../src/github/model/repository.js');
 const repoDetails = require('../../resources/github/repoDetails.json')
 
 describe('Github client', function() {
-  const GITHUB_API_URL = "api.github.com"
-  const GITHUB_PRIVATE_TOKEN = "some_private_token"
+  const GITHUB_API_URL = config.get('gl2gh.github.url')
+  const GITHUB_PRIVATE_TOKEN = config.get('gl2gh.github.token')
   const githubClient = new GithubClient(GITHUB_API_URL, GITHUB_PRIVATE_TOKEN)
   let api
   beforeEach(() => {
@@ -33,7 +35,7 @@ describe('Github client', function() {
       //given
       const repoName = "some-repo"
       const isPrivate = true
-      api.post('/user/repos/').reply(201, repoDetails);
+      api.post('/user/repos').reply(201, repoDetails);
       //when
       const repository = await githubClient.createRepo(repoName, isPrivate)
       //then

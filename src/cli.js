@@ -39,7 +39,7 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 
 async function copyContent(gitlabGroupName, githubOrgName, projectNameFilter) {
   migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, projectNameFilter)
-        .catch((err) => logger.error(err.message))
+        .catch((err) => console.error(err.message))
 }
 
 function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType) {

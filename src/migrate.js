@@ -8,9 +8,9 @@ const Project = require('./gitlab/model/project.js');
 const GitClient = require('./gitClient.js');
 
 function Migrate() {
-  const gitClient = new GitClient(config.get('gl2h.gitlab.username'), config.get('gl2h.gitlab.token'), config.get('gl2h.github.token'));
-  const gitlabClient = new GitlabClient(config.get('gl2h.gitlab.url'), config.get('gl2h.gitlab.token'))
-  const githubClient = new GithubClient(config.get('gl2h.github.url'), config.get('gl2h.github.token'))
+  const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
+  const gitlabClient = new GitlabClient(config.get('gl2gh.gitlab.url'), config.get('gl2gh.gitlab.token'))
+  const githubClient = new GithubClient(config.get('gl2gh.github.url'), config.get('gl2gh.github.token'))
 
   this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
     let projects = [];

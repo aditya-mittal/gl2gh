@@ -4,6 +4,8 @@ const assert = chai.assert;
 const expect = chai.expect
 const should = chai.should();
 const nock = require('nock');
+const config = require('config');
+
 const GitlabClient = require('../../../src/gitlab/client.js');
 const Group = require('../../../src/gitlab/model/group.js');
 const Project = require('../../../src/gitlab/model/project.js');
@@ -13,8 +15,8 @@ const subgroupsList = require('../../resources/gitlab/subgroupsList.json')
 const subgroupDetails = require('../../resources/gitlab/subgroup1Details.json')
 
 describe('Gitlab client', function() {
-  const GITLAB_URL = "gitlab.com"
-  const GITLAB_PRIVATE_TOKEN = "some_private_token"
+  const GITLAB_URL = config.get('gl2gh.gitlab.url')
+  const GITLAB_PRIVATE_TOKEN = config.get('gl2gh.gitlab.token')
   const gitlabClient = new GitlabClient(GITLAB_URL, GITLAB_PRIVATE_TOKEN)
   let api
   beforeEach(() => {

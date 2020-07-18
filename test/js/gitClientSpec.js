@@ -13,7 +13,7 @@ const config = require('config');
 const GitClient = require('../../src/gitClient.js');
 
 describe('Git', function() {
-  const gitClient = new GitClient(config.get('gl2h.gitlab.username'), config.get('gl2h.gitlab.token'), config.get('gl2h.github.token'));
+  const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
   describe('Clone', function() {
     let cloneStub
     before(() => {

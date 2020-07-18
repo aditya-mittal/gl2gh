@@ -25,11 +25,11 @@ const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.jso
 
 describe('migrate', function() {
   const migrate = new Migrate()
-  const GITLAB_URL = config.get('gl2h.gitlab.url')
-  const GITLAB_PRIVATE_TOKEN = config.get('gl2h.gitlab.token')
+  const GITLAB_URL = config.get('gl2gh.gitlab.url')
+  const GITLAB_PRIVATE_TOKEN = config.get('gl2gh.gitlab.token')
 
-  const GITHUB_API_URL = config.get('gl2h.github.url')
-  const GITHUB_PRIVATE_TOKEN = config.get('gl2h.github.token')
+  const GITHUB_API_URL = config.get('gl2gh.github.url')
+  const GITHUB_PRIVATE_TOKEN = config.get('gl2gh.github.token')
 
   let gitlabApi
   let githubApi
@@ -74,7 +74,7 @@ describe('migrate', function() {
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
-      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
+      githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve());
       gitCreateRemoteStub.returns(Promise.resolve());
       gitListBranchesStub.returns(Promise.resolve(["master", "extra-branch"]));
@@ -161,7 +161,7 @@ describe('migrate', function() {
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup1").reply(200, gitlabSubgroup1Details);
       gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent("/")+"subgroup2").reply(200, gitlabSubgroup2Details);
-      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
+      githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve());
       gitCreateRemoteStub.returns(Promise.resolve());
       gitListBranchesStub.returns(Promise.resolve(["master"]));
@@ -188,7 +188,7 @@ describe('migrate', function() {
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName + '/subgroups').reply(200, gitlabSubgroupsList);
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent("/") + 'subgroup1').reply(200, gitlabSubgroup1Details);
       gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent("/") + 'subgroup2').reply(200, gitlabSubgroup2Details);
-      githubApi.post('/user/repos/').times(8).reply(201, githubRepoDetails)
+      githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails)
       gitCloneStub.returns(Promise.resolve());
       gitCreateRemoteStub.returns(Promise.resolve());
       gitListBranchesStub.returns(Promise.resolve(["master"]));
