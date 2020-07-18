@@ -15,12 +15,12 @@ $ npm test
 
 ### Run eslint
 ```bash
-$ npm lint
+$ npm run lint
 ```
 
 ### Run eslint that fixes the common problems
 ```bash
-$ npm lint:fix
+$ npm run lint:fix
 ```
 
 ### Run the tests in watch mode
