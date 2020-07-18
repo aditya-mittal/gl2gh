@@ -2,6 +2,9 @@
 
 const { Command } = require('commander');
 const config = require('config');
+const yaml = require('js-yaml');
+const fs   = require('fs');
+
 const Migrate = require('./migrate.js');
 
 const migrate = new Migrate();
@@ -23,7 +26,17 @@ program.command('copy-content <gitlab-group-name> <github-org-name>')
   .description('Copy content of repositories from GitLab to GitHub')
   .option('--starts-with <prefix>', 'Filter projects starting with specified prefix', '')
   .action( async (gitlabGroupName, githubOrgName, cmdObj) => {
-    await copyContent(gitlabGroupName, githubOrgName, cmdObj.startsWith);
+    await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, cmdObj.startsWith)
+            .catch((err) => console.error(err.message))
+  });
+
+program
+  .command('protect-branch <github-org-name> <repo-name> <branch-name>')
+  .description('Configure to protect branch of GitHub repo from direct pushes, rather expecting a pull request review')
+  .option('-c, --config <branch_protection_config>', 'Config for branch protection rule on github', readYamlFile, readYamlFile('./config/templates/branchProtectionRuleTemplate.yml'))
+  .action(async (githubOrgName, repoName, branchName, cmdObj) => {
+    await migrate.configureBranchProtectionRule(githubOrgName, repoName, branchName, cmdObj.config.branchProtectionRule)
+        .catch((err) => console.error(err.message))
   });
 
 program.parse(process.argv);
@@ -37,11 +50,6 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
   }
 }
 
-async function copyContent(gitlabGroupName, githubOrgName, projectNameFilter) {
-  migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, projectNameFilter)
-        .catch((err) => logger.error(err.message))
-}
-
 function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType) {
   projects.forEach((project, index) => {
     if(outputType === 'text') {
@@ -52,4 +60,8 @@ function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType)
       console.info(JSON.stringify(project))
     }
   });
+}
+
+function readYamlFile(yamlFile) {
+  return yaml.safeLoad(fs.readFileSync(yamlFile, 'utf8'));
 }

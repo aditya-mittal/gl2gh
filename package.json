@@ -10,7 +10,8 @@
     "start": "node src/main.js",
     "test": "mocha --recursive --require test/js/util/mochaHelper.js",
     "test-watch": "mocha --recursive --require test/js/util/mochaHelper.js -w",
-    "test-jenkins": "JUNIT_REPORT_PATH=./test_report.xml mocha --recursive --require test/js/util/mochaHelper.js --colors --reporter mocha-jenkins-reporter"
+    "test-jenkins": "JUNIT_REPORT_PATH=./test_report.xml mocha --recursive --require test/js/util/mochaHelper.js --colors --reporter mocha-jenkins-reporter",
+    "build": "npm install && npm link"
   },
   "author": "aditya-mittal",
   "repository": {
@@ -32,6 +33,6 @@
     "commander": "^5.1.0",
     "config": "^3.3.1",
     "isomorphic-git": "^1.4.4",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.19"
   }
 }

@@ -1,6 +1,7 @@
 const chai = require('chai');
 const expect = chai.expect;
 const sinon = require('sinon');
+const yaml = require('js-yaml');
 const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
@@ -96,4 +97,45 @@ describe('Tests for cli', () => {
         sinon.assert.calledWithExactly(migrateStub, gitlabGroupName, githubOrgName, projectNameFilter)
       });
     });
+  describe('Configure branch protection rules for a specific branch', function() {
+    let configureBranchProtectionRuleStub;
+    before(() => {
+      migrateStub = sinon.stub(migrate, 'configureBranchProtectionRule')
+      configureBranchProtectionRuleStub = function StubMigrate() {
+        this.configureBranchProtectionRule = migrateStub;
+      }
+    });
+    after(() => {
+      sinon.restore();
+    });
+    it('should configure branch protection rule for given github repo', async function() {
+      //given
+      const owner = 'someOwner'
+      const repoName = 'someRepo'
+      const branchName = 'master'
+      const configFile = './config/templates/branchProtectionRuleTemplate.yml'
+      //when
+      process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
+      await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+      //then
+      const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
+      sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+    });
+    it('should handle error gracefully when configuring branch protection rule', async function() {
+      //given
+      const owner = 'someOwner'
+      const repoName = 'someRepo'
+      const branchName = 'master'
+      const configFile = './config/templates/branchProtectionRuleTemplate.yml'
+      var errorMessage = 'Some error occurred while configuring branch protection rules'
+      migrateStub.returns(Promise.reject(new Error(errorMessage)))
+      //when
+      process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
+      await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+      //then
+      const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
+      sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+      expect(consoleError).to.eql([errorMessage]);
+    });
+  });
 });

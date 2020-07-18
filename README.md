@@ -53,6 +53,16 @@ $ gl2gh copy-content my-foo-group my-bar-org
 $ gl2gh copy-content --starts-with my-repo my-foo-group my-bar-org
 ```
 
+### Configure branch protection on GitHub
+
+```bash
+# copy example template as a starter
+$ cp config/templates/branchProtectionTemplate.yml /path/to/my/branchProtectionTemplate.yml
+
+# execute to configure branch protection rules
+$ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-bar-repo my-foo-branch 
+```
+
 ### Clean up
 
 After successful migration, this will clean up installed binary for migration.
