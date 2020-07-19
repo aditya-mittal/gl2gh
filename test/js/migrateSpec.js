@@ -263,11 +263,41 @@ describe('migrate', function() {
 			const projectPath = 'foo/sample-project-site';
 			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').reply(200, gitlabArchiveResponse);
 			//when
-			const res = await migrate.archiveGitlabProject(projectPath);
+			const res = await migrate.archiveGitlabProject([projectPath]);
 			//then
-			expect(res.status).to.equal(200);
-			expect(res.data.path_with_namespace).to.equal(projectPath);
-			expect(res.data.archived).to.be.true;
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.path_with_namespace).to.equal(projectPath);
+			expect(res[0].data.archived).to.be.true;
+		});
+		it('should archive multiple gitlab projects for given project path', async () => {
+			//given
+			const projectPath1 = 'foo/sample-project-site';
+			const projectPath2 = 'foo/sample-project-site-2';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath1) + '/archive').reply(200, gitlabArchiveResponse);
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath2) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject([projectPath1, projectPath2]);
+			//then
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.path_with_namespace).to.equal(projectPath1);
+			expect(res[0].data.archived).to.be.true;
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.archived).to.be.true;
+		});
+		it('should proceed for archiving other gitlab project(s) when error received for anyone', async () => {
+			//given
+			const nonExistingProjectPath = 'foo/non-existing-project';
+			const existingProjectPath = 'foo/sample-project-site';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(nonExistingProjectPath) + '/archive').reply(404);
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(existingProjectPath) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject([nonExistingProjectPath, existingProjectPath]);
+			//then
+			console.log('**********');
+			console.log(res);
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.path_with_namespace).to.equal(existingProjectPath);
+			expect(res[1].data.archived).to.be.true;
 		});
 	});
 });

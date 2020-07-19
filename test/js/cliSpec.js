@@ -164,18 +164,28 @@ describe('Tests for cli', () => {
 			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
 			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
 			//then
-			sinon.assert.calledWith(migrateStub, projectPath);
+			sinon.assert.calledWith(migrateStub, [projectPath]);
+		});
+		it('should archive multiple gitlab projects', async function() {
+			//given
+			const projectPath1 = 'project1';
+			const projectPath2 = 'project2';
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath1} ${projectPath2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, [projectPath1, projectPath2]);
 		});
 		it('should handle error gracefully when archiving project', async function() {
 			//given
 			const projectPath = 'project1';
 			const errorMessage = 'Some error occurred while archiving project';
-			migrateStub.withArgs(projectPath).returns(Promise.reject(new Error(errorMessage)));
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
 			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
 			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
 			//then
-			sinon.assert.calledWith(migrateStub, projectPath);
+			sinon.assert.calledWith(migrateStub, [projectPath]);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});

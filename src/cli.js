@@ -39,10 +39,10 @@ program
 	});
 
 program
-	.command('archive-project <project-path>')
+	.command('archive-project <project-path...>')
 	.description('Archive project(s) on GitLab')
-	.action(async (projectPath) => {
-		await migrate.archiveGitlabProject(projectPath)
+	.action(async (projectPaths) => {
+		await migrate.archiveGitlabProject(projectPaths)
 			.catch((err) => console.error(err.message));
 	});
 

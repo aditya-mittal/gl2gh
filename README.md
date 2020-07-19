@@ -79,7 +79,8 @@ $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-
 ### Archive project on GitLab
 
 ```bash
-$ gl2h archive-repo my-project-path  
+$ gl2h archive-repo my-project-path
+$ gl2h archive-repo my-project-path-1 my-project-path-2 ...  
 ```
 
 ### Clean up
