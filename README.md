@@ -75,6 +75,12 @@ $ cp config/templates/branchProtectionTemplate.yml /path/to/my/branchProtectionT
 # execute to configure branch protection rules
 $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-bar-repo my-foo-branch 
 ```
+### Archive source repository on GitLab
+
+```bash
+$ gl2h archive-repo <repo-path-1>  
+$ gl2h archive-repo <repo-path-1> <repo-path-2> ...  
+```
 
 ### Clean up
 
