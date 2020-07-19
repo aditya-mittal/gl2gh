@@ -58,6 +58,13 @@ function Migrate() {
 			});
 	};
 
+	this.archiveGitlabProject = function(projectPath) {
+		return gitlabClient.archiveProject(projectPath)
+			.catch((error) => {
+				console.error(error.message);
+			});
+	};
+
 	var _migrateProjectsToGithub = function(projects, githubOrgName) {
 		return _copyContentForProjects(projects, githubOrgName);
 	};

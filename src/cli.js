@@ -38,6 +38,14 @@ program
 			.catch((err) => console.error(err.message));
 	});
 
+program
+	.command('archive-project <project-path>')
+	.description('Archive project(s) on GitLab')
+	.action(async (projectPath) => {
+		await migrate.archiveGitlabProject(projectPath)
+			.catch((err) => console.error(err.message));
+	});
+
 program.parse(process.argv);
 
 async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter, outputType) {

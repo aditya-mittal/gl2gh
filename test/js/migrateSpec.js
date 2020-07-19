@@ -15,6 +15,7 @@ const gitlabGroupDetails = require('../resources/gitlab/groupDetails.json');
 const gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json');
 const gitlabSubgroup1Details = require('../resources/gitlab/subgroup1Details.json');
 const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.json');
+const gitlabArchiveResponse = require('../resources/gitlab/archiveResponse.json');
 const updateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json');
 
 describe('migrate', function() {
@@ -226,21 +227,7 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitPushToRemoteStub, 3);
 		});
 	});
-	describe('configure branch protection rules for github repo', function () {
-		beforeEach(() => {
-			githubApi = nock(
-				'https://' + GITHUB_API_URL, {
-					reqHeaders: {
-						'Content-Type': 'application/json',
-						'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-					}
-				}
-			);
-		});
-
-		afterEach(() => {
-			nock.cleanAll();
-		});
+	describe('configure github branch protection rules for github repo', function () {
 		it('should configure branch protection rule for given github repo', async () => {
 			//given
 			const owner = 'some-org';
@@ -268,6 +255,19 @@ describe('migrate', function() {
 			expect(res.data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
 			expect(res.data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
 			expect(res.data.enforce_admins.enabled).to.equal(enforce_admins);
+		});
+	});
+	describe('archive gitlab project', function () {
+		it('should archive gitlab project for given project path', async () => {
+			//given
+			const projectPath = 'foo/sample-project-site';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject(projectPath);
+			//then
+			expect(res.status).to.equal(200);
+			expect(res.data.path_with_namespace).to.equal(projectPath);
+			expect(res.data.archived).to.be.true;
 		});
 	});
 });

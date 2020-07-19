@@ -76,6 +76,12 @@ $ cp config/templates/branchProtectionTemplate.yml /path/to/my/branchProtectionT
 $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-bar-repo my-foo-branch 
 ```
 
+### Archive project on GitLab
+
+```bash
+$ gl2h archive-repo my-project-path  
+```
+
 ### Clean up
 
 After successful migration, this will clean up installed binary for migration.

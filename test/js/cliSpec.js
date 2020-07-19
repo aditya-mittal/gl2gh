@@ -135,7 +135,7 @@ describe('Tests for cli', () => {
 			const repoName = 'someRepo';
 			const branchName = 'master';
 			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
-			var errorMessage = 'Some error occurred while configuring branch protection rules';
+			const errorMessage = 'Some error occurred while configuring branch protection rules';
 			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
 			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
@@ -143,6 +143,39 @@ describe('Tests for cli', () => {
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
 			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
+	describe('Archive GitLab project', function() {
+		let archiveGitlabProjectStub;
+		before(() => {
+			migrateStub = sinon.stub(migrate, 'archiveGitlabProject');
+			archiveGitlabProjectStub = function StubMigrate() {
+				this.archiveGitlabProject = migrateStub;
+			};
+		});
+		after(() => {
+			sinon.restore();
+		});
+		it('should archive gitlab project for given project path', async function() {
+			//given
+			const projectPath = 'project1';
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, projectPath);
+		});
+		it('should handle error gracefully when archiving project', async function() {
+			//given
+			const projectPath = 'project1';
+			const errorMessage = 'Some error occurred while archiving project';
+			migrateStub.withArgs(projectPath).returns(Promise.reject(new Error(errorMessage)));
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, projectPath);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
