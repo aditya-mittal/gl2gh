@@ -65,6 +65,26 @@ function GitlabClient(url, privateToken) {
 			});
 	};
 
+	this.archiveRepo = function (projectPath) {
+		const path = 'projects/' + encodeURIComponent(projectPath) + '/archive';
+		const params = this._getParams('POST', path);
+		console.log(path);
+
+		return axios(params)
+			.then(response => {
+				console.log('Archived project %s with status %s', projectPath, response.status);
+				return response.data;
+			})   
+			.catch((error) => {
+				if(error.response && error.response.status === 404) {
+					console.error('No project repo found in the path %s for archiving: %s',projectPath, error.message);
+					throw new Error(`No project repo found in the path ${projectPath}, for archiving`);
+				}
+				console.error('Error while archiving project repo %s: %s', projectPath, error.message);
+				throw new Error(`Error while archiving project repo ${projectPath}`);
+			});
+	};
+
 	this._getParams = function (method, path) {
 		return {
 			url: `https://${this.url}/api/v4/${path}`,

@@ -6,9 +6,12 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
+const GitlabClient = require('../../src/gitlab/client');
+
 
 describe('Tests for cli', () => {
 	const migrate = new Migrate();
+	let gitlabClientObj = new GitlabClient('any_url', 'any_private_token');
 	let migrateStub;
 	const originalLog = console.info;
 	const originalErrorConsole = console.error;
@@ -144,6 +147,152 @@ describe('Tests for cli', () => {
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
 			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
 			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
+
+	describe('Archive one or more repos', () => {
+		let archiveRepoStubObj, archiveRepoStub;
+		before(() => {
+			archiveRepoStub = sinon.stub(gitlabClientObj, 'archiveRepo');
+			archiveRepoStubObj = function StubArchiveRepo() {
+				this.archiveRepo = archiveRepoStub;
+			};
+		});
+
+		after(() => {
+			sinon.restore();
+		});
+
+		it('should call gitlab client archive function for single repo', async () => {
+			//given
+			const repoName = 'repo1';
+			const stubResponse = {
+				name: repoName,
+				archived: true
+			};
+			archiveRepoStub.returns(stubResponse);
+	
+			//when
+			process.argv = `node ../../src/cli.js archive-repo ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+		
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			expect(consoleOutput).to.have.lengthOf(1);
+			expect(consoleOutput).to.eql([
+				`Project archived : ${repoName}`
+			]);
+		});
+		it('should handle error when gitlab client archive throws error for single repo', async () => {
+			//given
+			const repoName = 'repo1';
+			archiveRepoStub.withArgs(repoName).throws(new Error('Archived failed'));
+
+			//when
+			process.argv = `node ../../src/cli.js archive-repo ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			expect(consoleError).to.have.lengthOf(1);
+			expect(consoleError[0]).to.eql(`Project archival failed for : ${repoName}`);
+		});
+		it('should call gitlab client archive function for multiple repo', async () => {
+			//given
+			const repoName1 = 'repo1';
+			const repoName2 = 'repo2';
+			const stubResponse1 = {
+				name: repoName1,
+				archived: true
+			};
+			const stubResponse2 = {
+				name: repoName2,
+				archived: true
+			};
+			archiveRepoStub.withArgs(repoName1).returns(stubResponse1);
+			archiveRepoStub.withArgs(repoName2).returns(stubResponse2);
+
+			//when
+			process.argv = 'node ../../src/cli.js archive-repo repo1 repo2'.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			sinon.assert.calledWith(archiveRepoStub, 'repo2');
+			expect(consoleOutput).to.have.lengthOf(2);
+			expect(consoleOutput[0]).to.eql(`Project archived : ${repoName1}`);
+			expect(consoleOutput[1]).to.eql(`Project archived : ${repoName2}`);
+		});
+		it('should proceed for next repo if gitlab client archive function fail for one repo when multiple repos are passed', async () => {
+			//given
+			const repoName1 = 'repo1';
+			const repoName2 = 'repo2';
+			const stubResponse2 = {
+				name: repoName2,
+				archived: true
+			};
+			archiveRepoStub.withArgs(repoName1).throws(new Error('Archived failed'));
+			archiveRepoStub.withArgs(repoName2).returns(stubResponse2);
+
+			//when
+			process.argv = 'node ../../src/cli.js archive-repo repo1 repo2'.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			sinon.assert.calledWith(archiveRepoStub, 'repo2');
+			expect(consoleOutput).to.have.lengthOf(1);
+			expect(consoleError).to.have.lengthOf(1);
+			expect(consoleError[0]).to.eql(`Project archival failed for : ${repoName1}`);
+			expect(consoleOutput[0]).to.eql(`Project archived : ${repoName2}`);
+		});
+		it('should log failure if archive flag is not set in response from gitlab client for multiple repos', async () => {
+			//given
+			const repoName = 'repo1';
+			const stubResponse = {
+				name: repoName,
+				archived: false
+			};
+			archiveRepoStub.returns(stubResponse);
+
+			//when
+			process.argv = `node ../../src/cli.js archive-repo ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			expect(consoleError).to.have.lengthOf(1);
+			expect(consoleError).to.eql([
+				`Project archival failed for : ${repoName}`
+			]);
+		});
+
+		it('should proceed for next repo if gitlab client archive function fail for one repo when multiple repos are passed', async () => {
+			//given
+			const repoName1 = 'repo1';
+			const repoName2 = 'repo2';
+			const stubResponse1 = {
+				name: repoName1,
+				archived: false
+			};
+			const stubResponse2 = {
+				name: repoName2,
+				archived: true
+			};
+			archiveRepoStub.withArgs(repoName1).returns(stubResponse1);
+			archiveRepoStub.withArgs(repoName2).returns(stubResponse2);
+
+			//when
+			process.argv = 'node ../../src/cli.js archive-repo repo1 repo2'.split(' ');
+			await proxyquire('../../src/cli.js', {'./gitlab/client': archiveRepoStubObj});
+
+			//then
+			sinon.assert.calledWith(archiveRepoStub, 'repo1');
+			sinon.assert.calledWith(archiveRepoStub, 'repo2');
+			expect(consoleOutput).to.have.lengthOf(1);
+			expect(consoleError).to.have.lengthOf(1);
+			expect(consoleError[0]).to.eql(`Project archival failed for : ${repoName1}`);
+			expect(consoleOutput[0]).to.eql(`Project archived : ${repoName2}`);
 		});
 	});
 });

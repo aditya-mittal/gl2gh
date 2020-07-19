@@ -2,12 +2,16 @@
 
 const { Command } = require('commander');
 const yaml = require('js-yaml');
+const config = require('config');
 const fs   = require('fs');
 
 const Migrate = require('./migrate.js');
+const GitlabClient = require('./gitlab/client');
+
 
 const migrate = new Migrate();
 const program = new Command();
+const gitlabClient = new GitlabClient(config.get('gl2gh.gitlab.url'), config.get('gl2gh.gitlab.token'));
 
 program
 	.command('list <gitlab-group-name>')
@@ -38,6 +42,13 @@ program
 			.catch((err) => console.error(err.message));
 	});
 
+program
+	.command('archive-repo <repo-path...>')
+	.description('Archive project(s) on Gitlab.')
+	.action(async (repoPaths) => {
+		Promise.all(repoPaths.map((repoPath) => archiveGitlabRepo(repoPath)));
+	});
+
 program.parse(process.argv);
 
 async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter, outputType) {
@@ -46,6 +57,20 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 		printProjectsOnConsole(projects, numberOfProjects, outputType);
 	} catch(error) {
 		console.error(error.message);
+	}
+}
+
+async function archiveGitlabRepo(repoPath) {
+	try {
+		const response = await gitlabClient.archiveRepo(repoPath);
+		if (response.archived) {
+			console.info(`Project archived : ${repoPath}`);
+		} else {
+			console.error(`Project archival failed for : ${repoPath}`);
+		}
+	}
+	catch (error) {
+		console.error(`Project archival failed for : ${repoPath}`);
 	}
 }
 
