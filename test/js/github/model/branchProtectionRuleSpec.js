@@ -29,7 +29,7 @@ describe('Branch Protection Rule', function() {
 		branchProtectionRule.should.be.a('object');
 		branchProtectionRule.should.be.instanceof(BranchProtectionRule);
 		branchProtectionRule.required_status_checks_contexts.should.deep.equal([]);
-		branchProtectionRule.required_approving_review_count.should.equal(1);
+		branchProtectionRule.required_approving_review_count.should.equal(2);
 		branchProtectionRule.dismiss_stale_reviews.should.equal(true);
 		branchProtectionRule.enforce_admins.should.equal(true);
 	});
