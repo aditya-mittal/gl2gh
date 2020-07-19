@@ -71,16 +71,26 @@ describe('Tests for cli', () => {
 		afterEach(() => {
 			sinon.restore();
 		});
-		it('should copy contents of all repos', async function () {
+		it('should copy contents of all repos to github org when github org is specified', async function () {
 			//given
 			const gitlabGroupName = 'FOO';
 			const githubOrgName = 'BAR';
 			//when
-			process.argv = `node ../../src/cli.js copy-content ${gitlabGroupName} ${githubOrgName}`.split(' ');
+			process.argv = `node ../../src/cli.js copy-content ${gitlabGroupName} --github-org ${githubOrgName}`.split(' ');
 			await proxyquire('../../src/cli.js', { './migrate': copyContentFromGitlabToGithubStub });
 			//then
 			sinon.assert.callCount(migrateStub, 1);
 			sinon.assert.calledWithExactly(migrateStub, gitlabGroupName, githubOrgName, '');
+		});
+		it('should copy contents of all repos to user root when github org is not specified', async function () {
+			//given
+			const gitlabGroupName = 'FOO';
+			//when
+			process.argv = `node ../../src/cli.js copy-content ${gitlabGroupName} `.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': copyContentFromGitlabToGithubStub });
+			//then
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWithExactly(migrateStub, gitlabGroupName, undefined, '');
 		});
 		it('should copy contents of repos filtered on specified prefix', async function () {
 			//given
@@ -88,7 +98,7 @@ describe('Tests for cli', () => {
 			const githubOrgName = 'BAR';
 			const projectNameFilter = 'project';
 			//when
-			process.argv = `node ../../src/cli.js copy-content --starts-with ${projectNameFilter} ${gitlabGroupName} ${githubOrgName}`.split(' ');
+			process.argv = `node ../../src/cli.js copy-content --starts-with ${projectNameFilter} ${gitlabGroupName} --github-org ${githubOrgName}`.split(' ');
 			await proxyquire('../../src/cli.js', { './migrate': copyContentFromGitlabToGithubStub });
 			//then
 			sinon.assert.callCount(migrateStub, 1);

@@ -67,8 +67,8 @@ function Migrate() {
 			.catch((err) => console.error(err.message));
 	};
 
-	var _copyContent = function(project) {
-		return githubClient.createRepo(project.name, true)
+	var _copyContent = function(project, githubOrgName) {
+		return githubClient.createRepo(project.name, true, githubOrgName)
 			.then((githubRepository) => _cloneAndPushToNewRemote(githubRepository, project));
 	};
 

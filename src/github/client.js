@@ -5,8 +5,13 @@ function GithubClient(url, privateToken) {
 	this.url = url;
 	this.privateToken = privateToken;
 
-	this.createRepo = function (repoName, isPrivate) {
-		const path = 'user/repos';
+	this.createRepo = function (repoName, isPrivate, orgName) {
+		let path;
+		if(orgName !== undefined) {
+			path = `orgs/${orgName}/repos`;
+		} else {
+			path = 'user/repos';
+		}
 		const data = {
 			'name': repoName,
 			'private': isPrivate

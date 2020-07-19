@@ -33,7 +33,23 @@ describe('Github client', function() {
 		nock.cleanAll();
 	});
 	describe('#createRepo', function() {
-		it('should create new repo', async() => {
+		it('should create new repo under specified github org', async() => {
+			//given
+			const repoName = 'some-repo';
+			const isPrivate = true;
+			const orgName = 'some-org';
+			api.post(`/orgs/${orgName}/repos`).reply(201, repoDetails);
+			//when
+			const repository = await githubClient.createRepo(repoName, isPrivate, orgName);
+			//then
+			repository.should.be.a('object');
+			repository.should.be.instanceof(Repository);
+			repository.should.have.property('name');
+			repository.should.have.property('clone_url');
+			repository.should.have.property('delete_branch_on_merge');
+			repository['name'].should.equal(repoName);
+		});
+		it('should create new repo under user root when github org is not specified', async() => {
 			//given
 			const repoName = 'some-repo';
 			const isPrivate = true;
