@@ -20,11 +20,12 @@ program
 		await listProjects(gitlabGroupName, cmdObj.number, cmdObj.startsWith, cmdObj.output);
 	});
 
-program.command('copy-content <gitlab-group-name> <github-org-name>')
+program.command('copy-content <gitlab-group-name>')
 	.description('Copy content of repositories from GitLab to GitHub')
+	.option('--github-org <org_name>', 'GitHub Organisation Name')
 	.option('--starts-with <prefix>', 'Filter projects starting with specified prefix', '')
-	.action( async (gitlabGroupName, githubOrgName, cmdObj) => {
-		await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName, cmdObj.startsWith)
+	.action( async (gitlabGroupName, cmdObj) => {
+		await migrate.copyContentFromGitlabToGithub(gitlabGroupName, cmdObj.githubOrg, cmdObj.startsWith)
 			.catch((err) => console.error(err.message));
 	});
 

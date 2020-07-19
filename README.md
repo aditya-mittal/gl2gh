@@ -56,8 +56,14 @@ $ gl2gh list --output text my-foo-group # output is defaulted to json
 ### Copy content from GitLab to GitHub
 
 ```bash
-$ gl2gh copy-content my-foo-group my-bar-org
-$ gl2gh copy-content --starts-with my-repo my-foo-group my-bar-org
+# copy repo to specific organisation under github
+$ gl2gh copy-content my-foo-group --github-org my-bar-org
+
+# copy repo to user root on github
+$ gl2gh copy-content my-foo-group
+
+# copy only matching repo(s)
+$ gl2gh copy-content --starts-with my-repo my-foo-group
 ```
 
 ### Configure branch protection on GitHub
