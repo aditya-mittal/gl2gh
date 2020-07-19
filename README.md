@@ -73,7 +73,8 @@ $ gl2gh copy-content --starts-with my-repo my-foo-group
 $ cp config/templates/branchProtectionTemplate.yml /path/to/my/branchProtectionTemplate.yml
 
 # execute to configure branch protection rules
-$ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-bar-repo my-foo-branch 
+$ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-foo-branch my-bar-repo 
+$ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2 ... 
 ```
 
 ### Archive project on GitLab

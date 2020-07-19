@@ -51,11 +51,13 @@ function Migrate() {
 		}
 	};
 
-	this.configureGithubBranchProtectionRule = function(owner, repoName, branchName, rules) {
-		return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
-			.catch((error) => {
-				console.error(error.message);
-			});
+	this.configureGithubBranchProtectionRule = function(owner, repoNames, branchName, rules) {
+		return Promise.all(repoNames.map((repoName) => {
+			return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
+				.catch((error) => {
+					console.error(error.message);
+				});
+		}));
 	};
 
 	this.archiveGitlabProject = function(projectPaths) {

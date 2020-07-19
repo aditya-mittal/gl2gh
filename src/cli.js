@@ -30,11 +30,11 @@ program.command('copy-content <gitlab-group-name>')
 	});
 
 program
-	.command('protect-branch <github-org-name> <repo-name> <branch-name>')
+	.command('protect-branch <github-org-name> <branch-name> <repo-name...>')
 	.description('Configure to protect branch of GitHub repo from direct pushes, rather expecting a pull request review')
 	.option('-c, --config <branch_protection_config>', 'Config for branch protection rule on github', readYamlFile, readYamlFile('./config/templates/branchProtectionRuleTemplate.yml'))
-	.action(async (githubOrgName, repoName, branchName, cmdObj) => {
-		await migrate.configureGithubBranchProtectionRule(githubOrgName, repoName, branchName, cmdObj.config.branchProtectionRule)
+	.action(async (githubOrgName, branchName, repoNames, cmdObj) => {
+		await migrate.configureGithubBranchProtectionRule(githubOrgName, repoNames, branchName, cmdObj.config.branchProtectionRule)
 			.catch((err) => console.error(err.message));
 	});
 

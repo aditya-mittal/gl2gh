@@ -123,11 +123,25 @@ describe('Tests for cli', () => {
 			const branchName = 'master';
 			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
 			//when
-			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName}`.split(' ');
 			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
-			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+			sinon.assert.calledWith(migrateStub, owner, [repoName], branchName, config.branchProtectionRule);
+		});
+		it('should configure branch protection rule for multiple github repos', async function() {
+			//given
+			const owner = 'someOwner';
+			const branchName = 'master';
+			const repoName1 = 'someRepo1';
+			const repoName2 = 'someRepo2';
+			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
+			//when
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName1} ${repoName2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
+			//then
+			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
+			sinon.assert.calledWith(migrateStub, owner, [repoName1, repoName2], branchName, config.branchProtectionRule);
 		});
 		it('should handle error gracefully when configuring branch protection rule', async function() {
 			//given
@@ -138,11 +152,11 @@ describe('Tests for cli', () => {
 			const errorMessage = 'Some error occurred while configuring branch protection rules';
 			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
-			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName}`.split(' ');
 			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
-			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+			sinon.assert.calledWith(migrateStub, owner, [repoName], branchName, config.branchProtectionRule);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
