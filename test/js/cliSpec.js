@@ -106,11 +106,11 @@ describe('Tests for cli', () => {
 		});
 	});
 	describe('Configure branch protection rules for a specific branch', function() {
-		let configureBranchProtectionRuleStub;
+		let configureGithubBranchProtectionRuleStub;
 		before(() => {
-			migrateStub = sinon.stub(migrate, 'configureBranchProtectionRule');
-			configureBranchProtectionRuleStub = function StubMigrate() {
-				this.configureBranchProtectionRule = migrateStub;
+			migrateStub = sinon.stub(migrate, 'configureGithubBranchProtectionRule');
+			configureGithubBranchProtectionRuleStub = function StubMigrate() {
+				this.configureGithubBranchProtectionRule = migrateStub;
 			};
 		});
 		after(() => {
@@ -123,11 +123,25 @@ describe('Tests for cli', () => {
 			const branchName = 'master';
 			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
 			//when
-			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
-			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+			sinon.assert.calledWith(migrateStub, owner, [repoName], branchName, config.branchProtectionRule);
+		});
+		it('should configure branch protection rule for multiple github repos', async function() {
+			//given
+			const owner = 'someOwner';
+			const branchName = 'master';
+			const repoName1 = 'someRepo1';
+			const repoName2 = 'someRepo2';
+			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
+			//when
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName1} ${repoName2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
+			//then
+			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
+			sinon.assert.calledWith(migrateStub, owner, [repoName1, repoName2], branchName, config.branchProtectionRule);
 		});
 		it('should handle error gracefully when configuring branch protection rule', async function() {
 			//given
@@ -135,14 +149,57 @@ describe('Tests for cli', () => {
 			const repoName = 'someRepo';
 			const branchName = 'master';
 			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
-			var errorMessage = 'Some error occurred while configuring branch protection rules';
+			const errorMessage = 'Some error occurred while configuring branch protection rules';
 			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
-			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${branchName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
-			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
+			sinon.assert.calledWith(migrateStub, owner, [repoName], branchName, config.branchProtectionRule);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
+	describe('Archive GitLab project', function() {
+		let archiveGitlabProjectStub;
+		before(() => {
+			migrateStub = sinon.stub(migrate, 'archiveGitlabProject');
+			archiveGitlabProjectStub = function StubMigrate() {
+				this.archiveGitlabProject = migrateStub;
+			};
+		});
+		after(() => {
+			sinon.restore();
+		});
+		it('should archive gitlab project for given project path', async function() {
+			//given
+			const projectPath = 'project1';
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, [projectPath]);
+		});
+		it('should archive multiple gitlab projects', async function() {
+			//given
+			const projectPath1 = 'project1';
+			const projectPath2 = 'project2';
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath1} ${projectPath2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, [projectPath1, projectPath2]);
+		});
+		it('should handle error gracefully when archiving project', async function() {
+			//given
+			const projectPath = 'project1';
+			const errorMessage = 'Some error occurred while archiving project';
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
+			//when
+			process.argv = `node ../../src/cli.js archive-project ${projectPath}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': archiveGitlabProjectStub});
+			//then
+			sinon.assert.calledWith(migrateStub, [projectPath]);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});

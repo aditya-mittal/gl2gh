@@ -15,6 +15,7 @@ const gitlabGroupDetails = require('../resources/gitlab/groupDetails.json');
 const gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json');
 const gitlabSubgroup1Details = require('../resources/gitlab/subgroup1Details.json');
 const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.json');
+const gitlabArchiveResponse = require('../resources/gitlab/archiveResponse.json');
 const updateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json');
 
 describe('migrate', function() {
@@ -226,21 +227,7 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitPushToRemoteStub, 3);
 		});
 	});
-	describe('configure branch protection rules for github repo', function () {
-		beforeEach(() => {
-			githubApi = nock(
-				'https://' + GITHUB_API_URL, {
-					reqHeaders: {
-						'Content-Type': 'application/json',
-						'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-					}
-				}
-			);
-		});
-
-		afterEach(() => {
-			nock.cleanAll();
-		});
+	describe('configure github branch protection rules for github repo', function () {
 		it('should configure branch protection rule for given github repo', async () => {
 			//given
 			const owner = 'some-org';
@@ -261,13 +248,121 @@ describe('migrate', function() {
 			};
 			githubApi.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
 			//when
-			const res = await migrate.configureBranchProtectionRule(owner, repoName, branchName, rules);
+			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName], branchName, rules);
 			//then
-			expect(res.status).to.equal(200);
-			expect(res.data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);
-			expect(res.data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
-			expect(res.data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
-			expect(res.data.enforce_admins.enabled).to.equal(enforce_admins);
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);
+			expect(res[0].data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
+			expect(res[0].data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
+			expect(res[0].data.enforce_admins.enabled).to.equal(enforce_admins);
+		});
+		it('should configure branch protection rules for multiple github repos', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const branchName = 'master';
+			const required_status_checks_contexts = [
+				'continuous-integration/jenkins/pr-merge',
+				'continuous-integration/jenkins/branch'
+			];
+			const required_approving_review_count = 1;
+			const dismiss_stale_reviews = true;
+			const enforce_admins = true;
+			const rules = {
+				'required_status_checks_contexts': required_status_checks_contexts,
+				'required_approving_review_count': required_approving_review_count,
+				'dismiss_stale_reviews': dismiss_stale_reviews,
+				'enforce_admins': enforce_admins
+			};
+			githubApi.put(`/repos/${owner}/${repoName1}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			//when
+			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName1, repoName2], branchName, rules);
+			//then
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);
+			expect(res[0].data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
+			expect(res[0].data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
+			expect(res[0].data.enforce_admins.enabled).to.equal(enforce_admins);
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);
+			expect(res[1].data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
+			expect(res[1].data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
+			expect(res[1].data.enforce_admins.enabled).to.equal(enforce_admins);
+		});
+		it('should proceed for configuring branch protection rules for other github repos when error received for one', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const branchName = 'master';
+			const required_status_checks_contexts = [
+				'continuous-integration/jenkins/pr-merge',
+				'continuous-integration/jenkins/branch'
+			];
+			const required_approving_review_count = 1;
+			const dismiss_stale_reviews = true;
+			const enforce_admins = true;
+			const rules = {
+				'required_status_checks_contexts': required_status_checks_contexts,
+				'required_approving_review_count': required_approving_review_count,
+				'dismiss_stale_reviews': dismiss_stale_reviews,
+				'enforce_admins': enforce_admins
+			};
+			githubApi.put(`/repos/${owner}/${repoName1}/branches/${branchName}/protection`).reply(415);
+			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			//when
+			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName1, repoName2], branchName, rules);
+			//then
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);
+			expect(res[1].data.required_pull_request_reviews.required_approving_review_count).to.equal(required_approving_review_count);
+			expect(res[1].data.required_pull_request_reviews.dismiss_stale_reviews).to.equal(dismiss_stale_reviews);
+			expect(res[1].data.enforce_admins.enabled).to.equal(enforce_admins);
+		});
+	});
+	describe('archive gitlab project', function () {
+		it('should archive gitlab project for given project path', async () => {
+			//given
+			const projectPath = 'foo/sample-project-site';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject([projectPath]);
+			//then
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.path_with_namespace).to.equal(projectPath);
+			expect(res[0].data.archived).to.be.true;
+		});
+		it('should archive multiple gitlab projects', async () => {
+			//given
+			const projectPath1 = 'foo/sample-project-site';
+			const projectPath2 = 'foo/sample-project-site-2';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath1) + '/archive').reply(200, gitlabArchiveResponse);
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(projectPath2) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject([projectPath1, projectPath2]);
+			//then
+			expect(res[0].status).to.equal(200);
+			expect(res[0].data.path_with_namespace).to.equal(projectPath1);
+			expect(res[0].data.archived).to.be.true;
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.archived).to.be.true;
+		});
+		it('should proceed for archiving other gitlab project(s) when error received for anyone', async () => {
+			//given
+			const nonExistingProjectPath = 'foo/non-existing-project';
+			const existingProjectPath = 'foo/sample-project-site';
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(nonExistingProjectPath) + '/archive').reply(404);
+			gitlabApi.post('/api/v4/projects/' + encodeURIComponent(existingProjectPath) + '/archive').reply(200, gitlabArchiveResponse);
+			//when
+			const res = await migrate.archiveGitlabProject([nonExistingProjectPath, existingProjectPath]);
+			//then
+			console.log('**********');
+			console.log(res);
+			expect(res[1].status).to.equal(200);
+			expect(res[1].data.path_with_namespace).to.equal(existingProjectPath);
+			expect(res[1].data.archived).to.be.true;
 		});
 	});
 });
