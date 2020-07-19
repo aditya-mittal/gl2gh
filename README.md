@@ -1,5 +1,7 @@
 # Migrate GitLab repo(s) to GitHub
 
+![Build Status](https://github.com/aditya-mittal/gl2gh/workflows/build/badge.svg)
+
 Migrate one or more projects from GitLab to GitHub. 
 - For developer instructions, see the [developer README](DEVELOP.md)
 
@@ -15,25 +17,30 @@ v14.4.0
 
 $ npm --version
 6.14.4
+```
 
-# Install dependencies
-$ npm install
+### Installation
 
-# Link binary
-$ npm link
+```bash
+$ npm build
+```
 
+### Setup config
+
+```bash
 # set config
-$ cp config/example.yml /tmp/production.yml
+$ cp config/example.yml /path/to/my/config.yml
 # update the config with appropriate values
+
 # Set config directory path
-$ export NODE_CONFIG_DIR="/tmp"
+$ export NODE_CONFIG_DIR="path-to-directory-containing-config"
 # set appropriate config environment
-$ export NODE_CONFIG_ENV="production"
-
-# Set appropriate config env
 $ export NODE_CONFIG_ENV="your_config_file_name"
+```
 
-# See usage
+### Help
+
+```bash
 $ gl2gh -h
 ```
 
@@ -49,8 +56,14 @@ $ gl2gh list --output text my-foo-group # output is defaulted to json
 ### Copy content from GitLab to GitHub
 
 ```bash
-$ gl2gh copy-content my-foo-group my-bar-org
-$ gl2gh copy-content --starts-with my-repo my-foo-group my-bar-org
+# copy repo to specific organisation under github
+$ gl2gh copy-content my-foo-group --github-org my-bar-org
+
+# copy repo to user root on github
+$ gl2gh copy-content my-foo-group
+
+# copy only matching repo(s)
+$ gl2gh copy-content --starts-with my-repo my-foo-group
 ```
 
 ### Configure branch protection on GitHub
