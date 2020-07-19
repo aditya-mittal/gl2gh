@@ -51,7 +51,7 @@ function Migrate() {
 		}
 	};
 
-	this.configureBranchProtectionRule = function(owner, repoName, branchName, rules) {
+	this.configureGithubBranchProtectionRule = function(owner, repoName, branchName, rules) {
 		return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
 			.catch((error) => {
 				console.error(error.message);

@@ -248,7 +248,7 @@ describe('migrate', function() {
 			};
 			githubApi.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
 			//when
-			const res = await migrate.configureBranchProtectionRule(owner, repoName, branchName, rules);
+			const res = await migrate.configureGithubBranchProtectionRule(owner, repoName, branchName, rules);
 			//then
 			expect(res.status).to.equal(200);
 			expect(res.data.required_status_checks.contexts).to.deep.equal(required_status_checks_contexts);

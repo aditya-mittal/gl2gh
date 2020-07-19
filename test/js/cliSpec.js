@@ -106,11 +106,11 @@ describe('Tests for cli', () => {
 		});
 	});
 	describe('Configure branch protection rules for a specific branch', function() {
-		let configureBranchProtectionRuleStub;
+		let configureGithubBranchProtectionRuleStub;
 		before(() => {
-			migrateStub = sinon.stub(migrate, 'configureBranchProtectionRule');
-			configureBranchProtectionRuleStub = function StubMigrate() {
-				this.configureBranchProtectionRule = migrateStub;
+			migrateStub = sinon.stub(migrate, 'configureGithubBranchProtectionRule');
+			configureGithubBranchProtectionRuleStub = function StubMigrate() {
+				this.configureGithubBranchProtectionRule = migrateStub;
 			};
 		});
 		after(() => {
@@ -124,7 +124,7 @@ describe('Tests for cli', () => {
 			const configFile = './config/templates/branchProtectionRuleTemplate.yml';
 			//when
 			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
 			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
@@ -139,7 +139,7 @@ describe('Tests for cli', () => {
 			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
 			process.argv = `node ../../src/cli.js protect-branch -c ${configFile} ${owner} ${repoName} ${branchName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': configureBranchProtectionRuleStub});
+			await proxyquire('../../src/cli.js', {'./migrate': configureGithubBranchProtectionRuleStub});
 			//then
 			const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'));
 			sinon.assert.calledWith(migrateStub, owner, repoName, branchName, config.branchProtectionRule);
