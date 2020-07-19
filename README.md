@@ -5,7 +5,7 @@
 Migrate one or more projects from GitLab to GitHub. 
 - For developer instructions, see the [developer README](DEVELOP.md)
 
-#### Pre-requisites
+##### Pre-requisites
 
 - Obtain a GitLab private token as prescribed [here](./README.md#creating-a-private-token-for-gitlab)
 - Obtain a GitHub private token as prescribed [here](./README.md#creating-a-private-token-for-github)
