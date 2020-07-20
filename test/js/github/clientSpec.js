@@ -16,7 +16,8 @@ const updateBranchProtectionResponse = require('../../resources/github/updateBra
 describe('Github client', function() {
 	const GITHUB_API_URL = config.get('gl2gh.github.url');
 	const GITHUB_PRIVATE_TOKEN = config.get('gl2gh.github.token');
-	const githubClient = new GithubClient(GITHUB_API_URL, GITHUB_PRIVATE_TOKEN);
+	const GITHUB_USERNAME = config.get('gl2gh.github.username');
+	const githubClient = new GithubClient(GITHUB_API_URL, GITHUB_USERNAME, GITHUB_PRIVATE_TOKEN);
 	let api;
 	beforeEach(() => {
 		api = nock(
@@ -64,11 +65,58 @@ describe('Github client', function() {
 			repository.should.have.property('delete_branch_on_merge');
 			repository['name'].should.equal(repoName);
 		});
+		it('should return already existing repo under github org', async() => {
+			//given
+			const alreadyExistingRepoName = 'some-repo';
+			const isPrivate = true;
+			const orgName = 'some-org';
+			const owner = orgName;
+			api.post(`/orgs/${orgName}/repos`).reply(422);
+			api.get(`/repos/${owner}/${alreadyExistingRepoName}`).reply(201, repoDetails);
+			//when
+			const repository = await githubClient.createRepo(alreadyExistingRepoName, isPrivate, orgName);
+			//then
+			repository.should.be.a('object');
+			repository.should.be.instanceof(Repository);
+			repository.should.have.property('name');
+			repository.should.have.property('clone_url');
+			repository.should.have.property('delete_branch_on_merge');
+			repository['name'].should.equal(alreadyExistingRepoName);
+		});
+		it('should return already existing repo under user root when github org is not specified', async() => {
+			//given
+			const alreadyExistingRepoName = 'some-repo';
+			const isPrivate = true;
+			const owner = GITHUB_USERNAME;
+			api.post('/user/repos').reply(422);
+			api.get(`/repos/${owner}/${alreadyExistingRepoName}`).reply(201, repoDetails);
+			//when
+			const repository = await githubClient.createRepo(alreadyExistingRepoName, isPrivate);
+			//then
+			repository.should.be.a('object');
+			repository.should.be.instanceof(Repository);
+			repository.should.have.property('name');
+			repository.should.have.property('clone_url');
+			repository.should.have.property('delete_branch_on_merge');
+			repository['name'].should.equal(alreadyExistingRepoName);
+		});
+		it('should not fail when 422 status received while creating repo - that is repository already exists', async() => {
+			//given
+			const alreadyExistingRepoName = 'some-already-existing-repo';
+			const isPrivate = true;
+			const owner = GITHUB_USERNAME;
+			api.post('/user/repos').reply(422);
+			api.get(`/repos/${owner}/${alreadyExistingRepoName}`).reply(201, repoDetails);
+			//when
+			const promise = githubClient.createRepo(alreadyExistingRepoName, isPrivate);
+			//then
+			return promise.should.be.fulfilled;
+		});
 		it('should throw error when non 201 status received while creating repo', async() => {
 			//given
 			const repoName = 'errored-repo';
 			const isPrivate = true;
-			api.post('/user/repos/').reply(404);
+			api.post('/user/repos').reply(404);
 			//when & then
 			return assert.isRejected(
 				githubClient.createRepo(repoName, isPrivate),
@@ -80,13 +128,37 @@ describe('Github client', function() {
 			//given
 			const repoName = 'error';
 			const isPrivate = true;
-			api.post('/user/repos/').replyWithError('some error occurred while creating repo');
+			api.post('/user/repos').replyWithError('some error occurred while creating repo');
 			//when & then
 			return assert.isRejected(
 				githubClient.createRepo(repoName, isPrivate),
 				Error,
 				'Unable to create repo: error'
 			);
+		});
+	});
+	describe('#getRepo', function() {
+		it('should get the repo based on name provided', async () => {
+			//given
+			const owner = 'foo-user';
+			const repoName = 'some-repo';
+			api.get(`/repos/${owner}/${repoName}`).reply(201, repoDetails);
+			//when
+			const repository = await githubClient.getRepo(owner, repoName);
+			//then
+			repository.name.should.equal(repoName);
+			repository.clone_url.should.equal('https://github.com/foo-user/some-repo.git');
+		});
+		it('should throw error when github returns 404 on get repo', async () => {
+			//given
+			const owner = 'foo-user';
+			const repoName = 'some-repo';
+			api.get(`/repos/${owner}/${repoName}`).reply(404);
+			//when
+			return assert.isRejected(
+				githubClient.getRepo(owner, repoName),
+				Error,
+				`Unable to get repo with name ${repoName}`);
 		});
 	});
 	describe('#configureBranchProtectionRule', function () {

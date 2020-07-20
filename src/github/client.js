@@ -1,16 +1,20 @@
 const axios = require('axios').default;
 const Repository = require('./model/repository.js');
 
-function GithubClient(url, privateToken) {
+function GithubClient(url, username, privateToken) {
 	this.url = url;
+	this.username = username;
 	this.privateToken = privateToken;
 
 	this.createRepo = function (repoName, isPrivate, orgName) {
 		let path;
+		let owner;
 		if(orgName !== undefined) {
 			path = `orgs/${orgName}/repos`;
+			owner = orgName;
 		} else {
 			path = 'user/repos';
+			owner = this.username;
 		}
 		const data = {
 			'name': repoName,
@@ -25,8 +29,34 @@ function GithubClient(url, privateToken) {
 					response.data.delete_branch_on_merge, response.data.default_branch);
 			})
 			.catch((error) => {
+				if(error.response === undefined) {
+					console.error(error);
+					throw new Error(`Unable to create repo: ${repoName}`);
+				} else if(error.response.status === 422) {
+					console.warn(`Repository already exists with name: ${repoName}`);
+					return this.getRepo(owner, repoName);
+				} else {
+					console.error(`Unable to create repo: ${repoName}, error: ${error.message}`);
+					throw new Error(`Unable to create repo: ${repoName}, error: ${error.message}`);
+				}
+			});
+	};
+
+	this.getRepo = function(owner, repoName) {
+		const path = `repos/${owner}/${repoName}`;
+		const data = {
+			'name': repoName
+		};
+		let params = this._getParams('GET', path);
+		params.data = data;
+
+		return axios(params)
+			.then(response => {
+				return new Repository(response.data.name, response.data.clone_url,
+					response.data.delete_branch_on_merge, response.data.default_branch);
+			}).catch((error) => {
 				console.error(error);
-				throw new Error(`Unable to create repo: ${repoName}`);
+				throw new Error(`Unable to get repo with name ${repoName}`);
 			});
 	};
 
