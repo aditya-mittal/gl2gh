@@ -1,5 +1,6 @@
 const path = require('path');
 const _ = require('lodash');
+const fs = require('fs');
 const config = require('config');
 
 const GitlabClient = require('./gitlab/client.js');
@@ -146,7 +147,8 @@ function Migrate() {
 					console.warn(msg);
 				});
 		});
-		return Promise.all(promises);
+		return Promise.all(promises)
+			.then(() => fs.rmdirSync(path.join(process.cwd(), '/tmp', 'migrate', project.name), {recursive: true}));
 	};
 
 	var _filterProjectsWithPrefix = function (projects, prefix) {
