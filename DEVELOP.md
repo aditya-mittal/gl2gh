@@ -18,9 +18,9 @@ $ npm test
 $ npm run lint
 ```
 
-### Run eslint that fixes the common problems
+### Run eslint to fix the common problem(s)
 ```bash
-$ npm run lint:fix
+$ npm run lint-fix
 ```
 
 ### Run the tests in watch mode

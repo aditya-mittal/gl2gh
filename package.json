@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/main.js",
     "test": "mocha --recursive --require test/js/util/mochaHelper.js",
-    "lint:fix": "eslint --ignore-path .gitignore --fix .",
+    "lint-fix": "eslint --ignore-path .gitignore --fix .",
     "lint": "eslint --ignore-path .gitignore .",
     "test-watch": "mocha --recursive --require test/js/util/mochaHelper.js -w",
     "test-jenkins": "JUNIT_REPORT_PATH=./test_report.xml mocha --recursive --require test/js/util/mochaHelper.js --colors --reporter mocha-jenkins-reporter",
