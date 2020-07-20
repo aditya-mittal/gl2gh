@@ -84,6 +84,13 @@ $ gl2h auto-delete-head-branches my-foo-org my-bar-repo
 $ gl2h auto-delete-head-branches my-foo-org my-bar-repo-1 my-bar-repo-2 ...
 ```
 
+### Set default branch on GitHub
+
+```bash
+$ gl2h set-default-branch my-foo-org my-foo-branch my-bar-repo
+$ gl2h set-default-branch my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2
+```
+
 ### Archive project on GitLab
 
 ```bash
