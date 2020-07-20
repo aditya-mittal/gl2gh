@@ -10,7 +10,7 @@ const GithubBranchProtectionRule = require('./github/model/branchProtectionRule.
 function Migrate() {
 	const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
 	const gitlabClient = new GitlabClient(config.get('gl2gh.gitlab.url'), config.get('gl2gh.gitlab.token'));
-	const githubClient = new GithubClient(config.get('gl2gh.github.url'), config.get('gl2gh.github.token'));
+	const githubClient = new GithubClient(config.get('gl2gh.github.url'), config.get('gl2gh.github.username'), config.get('gl2gh.github.token'));
 
 	this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
 		let projects = [];
