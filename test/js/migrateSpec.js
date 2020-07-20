@@ -6,6 +6,7 @@ const expect = chai.expect;
 const nock = require('nock');
 const sinon = require('sinon');
 const git = require('isomorphic-git');
+const fs = require('fs');
 const config = require('config');
 
 const GitlabProject = require('../../src/gitlab/model/project.js');
@@ -34,12 +35,14 @@ describe('migrate', function() {
 	let gitPushToRemoteStub;
 	let gitListBranchesStub;
 	let gitCheckoutStub;
+	let rmdirStub;
 	beforeEach(() => {
 		gitCloneStub = sinon.stub(git, 'clone');
 		gitCreateRemoteStub = sinon.stub(git, 'addRemote');
 		gitListBranchesStub = sinon.stub(git, 'listBranches');
 		gitCheckoutStub = sinon.stub(git, 'checkout');
 		gitPushToRemoteStub = sinon.stub(git, 'push');
+		rmdirStub = sinon.stub(fs, 'rmdirSync');
 		gitlabApi = nock(
 			'https://' + GITLAB_URL, {
 				reqHeaders: {
@@ -86,6 +89,8 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 8);
 			sinon.assert.callCount(gitCheckoutStub, 16);
 			sinon.assert.callCount(gitPushToRemoteStub, 16);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
 		it('should migrate all repos under the gitlab group to github user root when github org is not specified', async () =>  {
 			//given
@@ -111,6 +116,8 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 8);
 			sinon.assert.callCount(gitCheckoutStub, 16);
 			sinon.assert.callCount(gitPushToRemoteStub, 16);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
 		it('should handle error gracefully when details for gitlab group not found', async () =>  {
 			//given
@@ -201,6 +208,37 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 8);
 			sinon.assert.callCount(gitCheckoutStub, 8);
 			sinon.assert.callCount(gitPushToRemoteStub, 8);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
+		});
+		it('should copy all branches of all repos from gitlab to github under specified github org', async () => {
+			//given
+			const gitlabGroupName = 'FOO';
+			const githubOrgName = 'BAR';
+			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
+			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
+			gitCloneStub.returns(Promise.resolve());
+			gitCreateRemoteStub.returns(Promise.resolve());
+			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
+			gitCheckoutStub.returns(Promise.resolve());
+			gitPushToRemoteStub.returns(Promise.resolve());
+
+			//when
+			const result = await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName);
+
+			//then
+			expect(result).to.equal(0);
+			sinon.assert.callCount(gitCloneStub, 8);
+			sinon.assert.callCount(gitCreateRemoteStub, 8);
+			sinon.assert.callCount(gitListBranchesStub, 8);
+			sinon.assert.callCount(gitCheckoutStub, 16);
+			sinon.assert.callCount(gitPushToRemoteStub, 16);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
 		it('should copy content of all repos from gitlab to github under user root when github org is not specified', async () => {
 			//given
@@ -228,6 +266,8 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 8);
 			sinon.assert.callCount(gitCheckoutStub, 8);
 			sinon.assert.callCount(gitPushToRemoteStub, 8);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
 		it('should copy content of only those repos matching the filter', async () => {
 			//given
@@ -256,6 +296,8 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 3);
 			sinon.assert.callCount(gitCheckoutStub, 3);
 			sinon.assert.callCount(gitPushToRemoteStub, 3);
+			sinon.assert.callCount(rmdirStub, 3);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
 	});
 	describe('configure github branch protection rules for github repo', function () {
