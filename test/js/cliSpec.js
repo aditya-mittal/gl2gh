@@ -160,6 +160,52 @@ describe('Tests for cli', () => {
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
+	describe('Update auto delete head branches on GitHub after pull requests are being merged', function() {
+		let updateAutoDeleteHeadBranchesStub;
+		before(() => {
+			migrateStub = sinon.stub(migrate, 'updateAutoDeleteHeadBranches');
+			updateAutoDeleteHeadBranchesStub = function StubMigrate() {
+				this.updateAutoDeleteHeadBranches = migrateStub;
+			};
+		});
+		after(() => {
+			sinon.restore();
+		});
+		it('should update auto delete head branches for given repoName', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			//when
+			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName]);
+		});
+		it('should update auto delete head branches for multiple repos', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			//when
+			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName1} ${repoName2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName1, repoName2]);
+		});
+		it('should handle error gracefully when updating auto delete head branches', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const errorMessage = 'Some error occurred while updating auto delete head branches for repo';
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
+			//when
+			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName]);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
 	describe('Archive GitLab project', function() {
 		let archiveGitlabProjectStub;
 		before(() => {

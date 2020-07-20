@@ -90,20 +90,6 @@ describe('Github client', function() {
 		});
 	});
 	describe('#configureBranchProtectionRule', function () {
-		beforeEach(() => {
-			api = nock(
-				'https://' + GITHUB_API_URL, {
-					reqHeaders: {
-						'Content-Type': 'application/json',
-						'Authorization': 'token ' + GITHUB_PRIVATE_TOKEN
-					}
-				}
-			);
-		});
-
-		afterEach(() => {
-			nock.cleanAll();
-		});
 		it('should configure branch protection rule for the repo', async () => {
 			//given
 			const owner = 'some-org';
@@ -156,6 +142,35 @@ describe('Github client', function() {
 				githubClient.configureBranchProtectionRule(owner, repoName, branchName, new BranchProtectionRule(rules)),
 				Error,
 				'Error configuring branch protection rule on ' +branchName+ ' of ' +repoName);
+		});
+	});
+	describe('#updateAutoDeleteHeadBranches', function () {
+		it('should update auto delete head branches for the repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			api.patch(`/repos/${owner}/${repoName}`).reply(200, repoDetails);
+			//when
+			const repository = await githubClient.updateAutoDeleteHeadBranches(owner, repoName);
+			//then
+			repository.should.be.a('object');
+			repository.should.be.instanceof(Repository);
+			repository.should.have.property('name');
+			repository.should.have.property('clone_url');
+			repository.should.have.property('delete_branch_on_merge');
+			repository['name'].should.equal(repoName);
+			repository['delete_branch_on_merge'].should.be.true;
+		});
+		it('should throw error when non 200 response obtained while updating auto delete head branches for the repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			api.patch(`/repos/${owner}/${repoName}`).reply(404);
+			//when & then
+			return assert.isRejected(
+				githubClient.updateAutoDeleteHeadBranches(owner, repoName),
+				Error,
+				'Unable to update auto delete head branches on ' + repoName);
 		});
 	});
 });

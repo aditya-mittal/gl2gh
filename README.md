@@ -77,6 +77,13 @@ $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-
 $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2 ... 
 ```
 
+### Enable automatically delete head branches on GitHub  
+
+```bash
+$ gl2h auto-delete-head-branches my-foo-org my-bar-repo
+$ gl2h auto-delete-head-branches my-foo-org my-bar-repo-1 my-bar-repo-2 ...
+```
+
 ### Archive project on GitLab
 
 ```bash

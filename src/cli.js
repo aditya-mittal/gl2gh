@@ -30,11 +30,19 @@ program.command('copy-content <gitlab-group-name>')
 	});
 
 program
-	.command('protect-branch <github-org-name> <branch-name> <repo-name...>')
+	.command('protect-branch <owner> <branch-name> <repo-name...>')
 	.description('Configure to protect branch of GitHub repo from direct pushes, rather expecting a pull request review')
 	.option('-c, --config <branch_protection_config>', 'Config for branch protection rule on github', readYamlFile, readYamlFile('./config/templates/branchProtectionRuleTemplate.yml'))
-	.action(async (githubOrgName, branchName, repoNames, cmdObj) => {
-		await migrate.configureGithubBranchProtectionRule(githubOrgName, repoNames, branchName, cmdObj.config.branchProtectionRule)
+	.action(async (owner, branchName, repoNames, cmdObj) => {
+		await migrate.configureGithubBranchProtectionRule(owner, repoNames, branchName, cmdObj.config.branchProtectionRule)
+			.catch((err) => console.error(err.message));
+	});
+
+program
+	.command('auto-delete-head-branches <owner> <repo-name...>')
+	.description('Enables the setting to automatically delete head branches after pull requests are merged on the GitHub repo')
+	.action(async (owner, repoNames) => {
+		await migrate.updateAutoDeleteHeadBranches(owner, repoNames)
 			.catch((err) => console.error(err.message));
 	});
 

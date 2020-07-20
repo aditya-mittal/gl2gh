@@ -60,6 +60,15 @@ function Migrate() {
 		}));
 	};
 
+	this.updateAutoDeleteHeadBranches = function (owner, repoNames) {
+		return Promise.all(repoNames.map((repoName) => {
+			return githubClient.updateAutoDeleteHeadBranches(owner, repoName)
+				.catch((error) => {
+					console.error(error.message);
+				});
+		}));
+	};
+
 	this.archiveGitlabProject = function(projectPaths) {
 		return Promise.all(projectPaths.map((projectPath) => {
 			return gitlabClient.archiveProject(projectPath)
