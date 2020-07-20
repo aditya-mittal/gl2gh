@@ -12,13 +12,13 @@ function Migrate() {
 	const gitlabClient = new GitlabClient(config.get('gl2gh.gitlab.url'), config.get('gl2gh.gitlab.token'));
 	const githubClient = new GithubClient(config.get('gl2gh.github.url'), config.get('gl2gh.github.token'));
 
-	this.migrateToGithub = async function(gitlabGroupName) {
+	this.migrateToGithub = async function(gitlabGroupName, githubOrgName) {
 		let projects = [];
 		try {
 			projects.push(... await _getProjectsWithinGroup(gitlabGroupName));
 			projects.push(... await _getProjectsForAllSubgroups(gitlabGroupName));
 			projects.push(... await _getProjectsSharedWithGroup(gitlabGroupName));
-			await _migrateProjectsToGithub(projects);
+			await _migrateProjectsToGithub(this, projects, githubOrgName);
 			return 0;
 		} catch(error) {
 			return 1;
@@ -28,7 +28,7 @@ function Migrate() {
 	this.copyContentFromGitlabToGithub = async function(gitlabGroupName, githubOrgName, projectNameFilter = '') {
 		try {
 			let projects = await this.getListOfAllProjectsToMigrate(gitlabGroupName, projectNameFilter);
-			await _copyContentForProjects(projects, githubOrgName);
+			await _copyContentForProjects(this, projects, githubOrgName);
 			return 0;
 		} catch (error) {
 			console.error(error);
@@ -69,6 +69,15 @@ function Migrate() {
 		}));
 	};
 
+	this.updateDefaultBranchOnGithub = function (owner, repoNames, branchName) {
+		return Promise.all(repoNames.map((repoName) => {
+			return githubClient.updateDefaultBranch(owner, repoName, branchName)
+				.catch((error) => {
+					console.error(error.message);
+				});
+		}));
+	};
+
 	this.archiveGitlabProject = function(projectPaths) {
 		return Promise.all(projectPaths.map((projectPath) => {
 			return gitlabClient.archiveProject(projectPath)
@@ -78,12 +87,19 @@ function Migrate() {
 		}));
 	};
 
-	var _migrateProjectsToGithub = function(projects, githubOrgName) {
-		return _copyContentForProjects(projects, githubOrgName);
+	var _migrateProjectsToGithub = function(self, projects, githubOrgName) {
+		return _copyContentForProjects(self, projects, githubOrgName);
 	};
-	var _copyContentForProjects = async function(projects, githubOrgName) {
+
+	var _copyContentForProjects = async function(self, projects, githubOrgName) {
+		const defaultBranchName = 'master';
 		const promises = projects.map(project => _copyContent(project, githubOrgName));
+		let owner = githubOrgName;
+		if(githubOrgName === undefined) {
+			owner = config.get('gl2gh.github.username');
+		}
 		return await Promise.all(promises)
+			.then(() => self.updateDefaultBranchOnGithub(owner, projects.map(project => project.name), defaultBranchName))
 			.catch((err) => console.error(err.message));
 	};
 

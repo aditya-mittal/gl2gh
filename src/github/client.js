@@ -21,7 +21,8 @@ function GithubClient(url, privateToken) {
 
 		return axios(params)
 			.then(response => {
-				return new Repository(response.data.name, response.data.clone_url, response.data.delete_branch_on_merge);
+				return new Repository(response.data.name, response.data.clone_url,
+					response.data.delete_branch_on_merge, response.data.default_branch);
 			})
 			.catch((error) => {
 				console.error(error);
@@ -76,10 +77,29 @@ function GithubClient(url, privateToken) {
 		return axios(params)
 			.then(response => {
 				return new Repository(response.data.name, response.data.clone_url,
-					response.data.delete_branch_on_merge);
+					response.data.delete_branch_on_merge, response.data.default_branch);
 			}).catch((error) => {
 				console.error('Error updating auto delete head branches on %s: %s', repoName, error.message);
 				throw new Error(`Unable to update auto delete head branches on ${repoName}`);
+			});
+	};
+
+	this.updateDefaultBranch = function(owner, repoName, defaultBranchName) {
+		const path = `repos/${owner}/${repoName}`;
+		const data = {
+			'default_branch': defaultBranchName
+		};
+		let params = this._getParams('PATCH', path);
+		params.data = data;
+
+		return axios(params)
+			.then(response => {
+				console.info(`Default branch set to ${defaultBranchName}`);
+				return new Repository(response.data.name, response.data.clone_url,
+					response.data.delete_branch_on_merge, response.data.default_branch);
+			}).catch((error) => {
+				console.error(error);
+				throw new Error(`Unable to set default branch to ${defaultBranchName} for ${repoName}`);
 			});
 	};
 

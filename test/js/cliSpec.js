@@ -206,6 +206,55 @@ describe('Tests for cli', () => {
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
+	describe('Update default branch on GitHub', function() {
+		let updateDefaultBranchOnGithubStub;
+		before(() => {
+			migrateStub = sinon.stub(migrate, 'updateDefaultBranchOnGithub');
+			updateDefaultBranchOnGithubStub = function StubMigrate() {
+				this.updateDefaultBranchOnGithub = migrateStub;
+			};
+		});
+		after(() => {
+			sinon.restore();
+		});
+		it('should update default branch for given repoName', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranchName = 'master';
+			//when
+			process.argv = `node ../../src/cli.js set-default-branch ${owner} ${defaultBranchName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateDefaultBranchOnGithubStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName], defaultBranchName);
+		});
+		it('should update default branch for multiple repos', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const defaultBranchName = 'master';
+			//when
+			process.argv = `node ../../src/cli.js set-default-branch ${owner} ${defaultBranchName} ${repoName1} ${repoName2}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateDefaultBranchOnGithubStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName1, repoName2], defaultBranchName);
+		});
+		it('should handle error gracefully when updating default branch', async function() {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranchName = 'master';
+			const errorMessage = 'Some error occurred while updating default branch for repo';
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
+			//when
+			process.argv = `node ../../src/cli.js set-default-branch ${owner} ${defaultBranchName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', {'./migrate': updateDefaultBranchOnGithubStub});
+			//then
+			sinon.assert.calledWith(migrateStub, owner, [repoName], defaultBranchName);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
 	describe('Archive GitLab project', function() {
 		let archiveGitlabProjectStub;
 		before(() => {

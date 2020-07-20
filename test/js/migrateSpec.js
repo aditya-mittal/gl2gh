@@ -62,7 +62,7 @@ describe('migrate', function() {
 		nock.cleanAll();
 	});
 	describe('migrate gitlab repo(s) to github', function() {
-		it('should migrate all repos under the gitlab group to github', async () =>  {
+		it('should migrate all repos under the gitlab group to specified github org', async () =>  {
 			//given
 			const gitlabGroupName = 'FOO';
 			const githubOrgName = 'BAR';
@@ -70,7 +70,8 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
-			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
@@ -78,6 +79,31 @@ describe('migrate', function() {
 			gitPushToRemoteStub.returns(Promise.resolve());
 			//when
 			const result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName);
+			//then
+			expect(result).to.equal(0);
+			sinon.assert.callCount(gitCloneStub, 8);
+			sinon.assert.callCount(gitCreateRemoteStub, 8);
+			sinon.assert.callCount(gitListBranchesStub, 8);
+			sinon.assert.callCount(gitCheckoutStub, 16);
+			sinon.assert.callCount(gitPushToRemoteStub, 16);
+		});
+		it('should migrate all repos under the gitlab group to github user root when github org is not specified', async () =>  {
+			//given
+			const gitlabGroupName = 'FOO';
+			const githubUserName = config.get('gl2gh.github.username');
+			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
+			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubUserName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
+			gitCloneStub.returns(Promise.resolve());
+			gitCreateRemoteStub.returns(Promise.resolve());
+			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
+			gitCheckoutStub.returns(Promise.resolve());
+			gitPushToRemoteStub.returns(Promise.resolve());
+			//when
+			const result = await migrate.migrateToGithub(gitlabGroupName);
 			//then
 			expect(result).to.equal(0);
 			sinon.assert.callCount(gitCloneStub, 8);
@@ -158,6 +184,7 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
@@ -178,11 +205,13 @@ describe('migrate', function() {
 		it('should copy content of all repos from gitlab to github under user root when github org is not specified', async () => {
 			//given
 			const gitlabGroupName = 'FOO';
+			const githubUserName = config.get('gl2gh.github.username');
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubUserName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
@@ -210,6 +239,7 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent('/') + 'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent('/') + 'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post(`/orgs/${githubOrgName}/repos`).times(3).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(3).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
@@ -364,7 +394,7 @@ describe('migrate', function() {
 			expect(res[1].data.archived).to.be.true;
 		});
 	});
-	describe('update auto delete head branches', function () {
+	describe('update auto delete head branches on github', function () {
 		it('should update auto delete head branches for the given repo', async () => {
 			//given
 			const owner = 'some-org';
@@ -421,6 +451,67 @@ describe('migrate', function() {
 			repositoryList[1].should.have.property('clone_url');
 			repositoryList[1].should.have.property('delete_branch_on_merge');
 			repositoryList[1]['delete_branch_on_merge'].should.be.true;
+		});
+	});
+	describe('update default branch on github', function () {
+		it('should update default branch for the given repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateDefaultBranchOnGithub(owner, [repoName], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(1);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('clone_url');
+			repositoryList[0].should.have.property('delete_branch_on_merge');
+			repositoryList[0].should.have.property('default_branch');
+			repositoryList[0]['name'].should.equal(repoName);
+			repositoryList[0]['default_branch'].should.equal(defaultBranchName);
+		});
+		it('should update default branches for multiple github repos', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(200, githubRepoDetails);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateDefaultBranchOnGithub(owner, [repoName1, repoName2], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('default_branch');
+			repositoryList[0]['default_branch'].should.equal(defaultBranchName);
+			repositoryList[1]['default_branch'].should.equal(defaultBranchName);
+		});
+		it('should proceed for updating default branch for other repo(s) when error received for anyone', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(404);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[1].should.be.a('object');
+			repositoryList[1].should.be.instanceof(GithubRepository);
+			repositoryList[1].should.have.property('name');
+			repositoryList[1].should.have.property('default_branch');
+			repositoryList[1]['default_branch'].should.equal(defaultBranchName);
 		});
 	});
 });
