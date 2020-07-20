@@ -62,7 +62,7 @@ describe('migrate', function() {
 		nock.cleanAll();
 	});
 	describe('migrate gitlab repo(s) to github', function() {
-		it('should migrate all repos under the gitlab group to github', async () =>  {
+		it('should migrate all repos under the gitlab group to specified github org', async () =>  {
 			//given
 			const gitlabGroupName = 'FOO';
 			const githubOrgName = 'BAR';
@@ -70,7 +70,8 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
-			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
@@ -78,6 +79,31 @@ describe('migrate', function() {
 			gitPushToRemoteStub.returns(Promise.resolve());
 			//when
 			const result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName);
+			//then
+			expect(result).to.equal(0);
+			sinon.assert.callCount(gitCloneStub, 8);
+			sinon.assert.callCount(gitCreateRemoteStub, 8);
+			sinon.assert.callCount(gitListBranchesStub, 8);
+			sinon.assert.callCount(gitCheckoutStub, 16);
+			sinon.assert.callCount(gitPushToRemoteStub, 16);
+		});
+		it('should migrate all repos under the gitlab group to github user root when github org is not specified', async () =>  {
+			//given
+			const gitlabGroupName = 'FOO';
+			const githubUserName = config.get('gl2gh.github.username');
+			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
+			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubUserName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
+			gitCloneStub.returns(Promise.resolve());
+			gitCreateRemoteStub.returns(Promise.resolve());
+			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
+			gitCheckoutStub.returns(Promise.resolve());
+			gitPushToRemoteStub.returns(Promise.resolve());
+			//when
+			const result = await migrate.migrateToGithub(gitlabGroupName);
 			//then
 			expect(result).to.equal(0);
 			sinon.assert.callCount(gitCloneStub, 8);
@@ -158,6 +184,7 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
@@ -178,11 +205,13 @@ describe('migrate', function() {
 		it('should copy content of all repos from gitlab to github under user root when github org is not specified', async () => {
 			//given
 			const gitlabGroupName = 'FOO';
+			const githubUserName = config.get('gl2gh.github.username');
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post('/user/repos').times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubUserName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
@@ -210,6 +239,7 @@ describe('migrate', function() {
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent('/') + 'subgroup1').reply(200, gitlabSubgroup1Details);
 			gitlabApi.get('/api/v4/groups/' + gitlabGroupName + encodeURIComponent('/') + 'subgroup2').reply(200, gitlabSubgroup2Details);
 			githubApi.post(`/orgs/${githubOrgName}/repos`).times(3).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(3).reply(200, githubRepoDetails);
 			gitCloneStub.returns(Promise.resolve());
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
