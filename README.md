@@ -22,7 +22,7 @@ $ npm --version
 ### Installation
 
 ```bash
-$ npm build
+$ npm run build
 ```
 
 ### Setup config
@@ -93,10 +93,10 @@ $ gl2h archive-repo my-project-path-1 my-project-path-2 ...
 
 ### Clean up
 
-After successful migration, this will clean up installed binary for migration.
+Clean up any installed binary for migration
 
 ```bash
-$ npm unlink
+$ npm run clean
 ```
 
 ### Creating a private token for GitHub
