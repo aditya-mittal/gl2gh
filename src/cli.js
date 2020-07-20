@@ -47,6 +47,14 @@ program
 	});
 
 program
+	.command('set-default-branch <owner> <branch-name> <repo-name...>')
+	.description('Sets the default branch on GitHub')
+	.action(async (owner, branchName, repoNames) => {
+		await migrate.updateDefaultBranchOnGithub(owner, repoNames, branchName)
+			.catch((err) => console.error(err.message));
+	});
+
+program
 	.command('archive-project <project-path...>')
 	.description('Archive project(s) on GitLab')
 	.action(async (projectPaths) => {

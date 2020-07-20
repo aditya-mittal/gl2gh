@@ -364,7 +364,7 @@ describe('migrate', function() {
 			expect(res[1].data.archived).to.be.true;
 		});
 	});
-	describe('update auto delete head branches', function () {
+	describe('update auto delete head branches on github', function () {
 		it('should update auto delete head branches for the given repo', async () => {
 			//given
 			const owner = 'some-org';
@@ -421,6 +421,67 @@ describe('migrate', function() {
 			repositoryList[1].should.have.property('clone_url');
 			repositoryList[1].should.have.property('delete_branch_on_merge');
 			repositoryList[1]['delete_branch_on_merge'].should.be.true;
+		});
+	});
+	describe('update default branch on github', function () {
+		it('should update default branch for the given repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateDefaultBranchOnGithub(owner, [repoName], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(1);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('clone_url');
+			repositoryList[0].should.have.property('delete_branch_on_merge');
+			repositoryList[0].should.have.property('default_branch');
+			repositoryList[0]['name'].should.equal(repoName);
+			repositoryList[0]['default_branch'].should.equal(defaultBranchName);
+		});
+		it('should update default branches for multiple github repos', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(200, githubRepoDetails);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateDefaultBranchOnGithub(owner, [repoName1, repoName2], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('default_branch');
+			repositoryList[0]['default_branch'].should.equal(defaultBranchName);
+			repositoryList[1]['default_branch'].should.equal(defaultBranchName);
+		});
+		it('should proceed for updating default branch for other repo(s) when error received for anyone', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const defaultBranchName = 'master';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(404);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2], defaultBranchName);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[1].should.be.a('object');
+			repositoryList[1].should.be.instanceof(GithubRepository);
+			repositoryList[1].should.have.property('name');
+			repositoryList[1].should.have.property('default_branch');
+			repositoryList[1]['default_branch'].should.equal(defaultBranchName);
 		});
 	});
 });

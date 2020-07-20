@@ -69,6 +69,15 @@ function Migrate() {
 		}));
 	};
 
+	this.updateDefaultBranchOnGithub = function (owner, repoNames, branchName) {
+		return Promise.all(repoNames.map((repoName) => {
+			return githubClient.updateDefaultBranch(owner, repoName, branchName)
+				.catch((error) => {
+					console.error(error.message);
+				});
+		}));
+	};
+
 	this.archiveGitlabProject = function(projectPaths) {
 		return Promise.all(projectPaths.map((projectPath) => {
 			return gitlabClient.archiveProject(projectPath)
