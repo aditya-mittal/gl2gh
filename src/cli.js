@@ -42,7 +42,7 @@ program
 	.command('auto-delete-head-branches <owner> <repo-name...>')
 	.description('Enables the setting to automatically delete head branches after pull requests are merged on the GitHub repo')
 	.action(async (owner, repoNames) => {
-		await migrate.updateAutoDeleteHeadBranches(owner, repoNames)
+		await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, repoNames)
 			.catch((err) => console.error(err.message));
 	});
 

@@ -371,7 +371,7 @@ describe('migrate', function() {
 			const repoName = 'some-repo';
 			githubApi.patch(`/repos/${owner}/${repoName}`).reply(200, githubRepoDetails);
 			//when
-			const repositoryList = await migrate.updateAutoDeleteHeadBranches(owner, [repoName]);
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName]);
 			//then
 			repositoryList.should.be.an('array');
 			repositoryList.should.have.lengthOf(1);
@@ -391,7 +391,7 @@ describe('migrate', function() {
 			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(200, githubRepoDetails);
 			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
 			//when
-			const repositoryList = await migrate.updateAutoDeleteHeadBranches(owner, [repoName1, repoName2]);
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2]);
 			//then
 			repositoryList.should.be.an('array');
 			repositoryList.should.have.lengthOf(2);
@@ -411,7 +411,7 @@ describe('migrate', function() {
 			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(404);
 			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
 			//when
-			const repositoryList = await migrate.updateAutoDeleteHeadBranches(owner, [repoName1, repoName2]);
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2]);
 			//then
 			repositoryList.should.be.an('array');
 			repositoryList.should.have.lengthOf(2);

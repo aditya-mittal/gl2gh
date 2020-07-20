@@ -60,7 +60,7 @@ function Migrate() {
 		}));
 	};
 
-	this.updateAutoDeleteHeadBranches = function (owner, repoNames) {
+	this.updateAutoDeleteHeadBranchesOnGithub = function (owner, repoNames) {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.updateAutoDeleteHeadBranches(owner, repoName)
 				.catch((error) => {

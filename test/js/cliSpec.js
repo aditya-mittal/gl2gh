@@ -161,11 +161,11 @@ describe('Tests for cli', () => {
 		});
 	});
 	describe('Update auto delete head branches on GitHub after pull requests are being merged', function() {
-		let updateAutoDeleteHeadBranchesStub;
+		let updateAutoDeleteHeadBranchesOnGithubStub;
 		before(() => {
-			migrateStub = sinon.stub(migrate, 'updateAutoDeleteHeadBranches');
-			updateAutoDeleteHeadBranchesStub = function StubMigrate() {
-				this.updateAutoDeleteHeadBranches = migrateStub;
+			migrateStub = sinon.stub(migrate, 'updateAutoDeleteHeadBranchesOnGithub');
+			updateAutoDeleteHeadBranchesOnGithubStub = function StubMigrate() {
+				this.updateAutoDeleteHeadBranchesOnGithub = migrateStub;
 			};
 		});
 		after(() => {
@@ -177,7 +177,7 @@ describe('Tests for cli', () => {
 			const repoName = 'some-repo';
 			//when
 			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesOnGithubStub});
 			//then
 			sinon.assert.calledWith(migrateStub, owner, [repoName]);
 		});
@@ -188,7 +188,7 @@ describe('Tests for cli', () => {
 			const repoName2 = 'some-repo-2';
 			//when
 			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName1} ${repoName2}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesOnGithubStub});
 			//then
 			sinon.assert.calledWith(migrateStub, owner, [repoName1, repoName2]);
 		});
@@ -200,7 +200,7 @@ describe('Tests for cli', () => {
 			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 			//when
 			process.argv = `node ../../src/cli.js auto-delete-head-branches ${owner} ${repoName}`.split(' ');
-			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesStub});
+			await proxyquire('../../src/cli.js', {'./migrate': updateAutoDeleteHeadBranchesOnGithubStub});
 			//then
 			sinon.assert.calledWith(migrateStub, owner, [repoName]);
 			expect(consoleError).to.eql([errorMessage]);
