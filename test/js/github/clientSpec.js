@@ -173,4 +173,36 @@ describe('Github client', function() {
 				'Unable to update auto delete head branches on ' + repoName);
 		});
 	});
+	describe('#updateDefaultBranch', function () {
+		it('should update default branch for the repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranch = 'master';
+			api.patch(`/repos/${owner}/${repoName}`).reply(200, repoDetails);
+			//when
+			const repository = await githubClient.updateDefaultBranch(owner, repoName, defaultBranch);
+			//then
+			repository.should.be.a('object');
+			repository.should.be.instanceof(Repository);
+			repository.should.have.property('name');
+			repository.should.have.property('clone_url');
+			repository.should.have.property('delete_branch_on_merge');
+			repository.should.have.property('default_branch');
+			repository['name'].should.equal(repoName);
+			repository['default_branch'].should.equal(defaultBranch);
+		});
+		it('should throw error when non 200 response obtained while updating auto delete head branches for the repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			const defaultBranch = 'master';
+			api.patch(`/repos/${owner}/${repoName}`).reply(404);
+			//when & then
+			return assert.isRejected(
+				githubClient.updateDefaultBranch(owner, repoName, defaultBranch),
+				Error,
+				`Unable to set default branch to ${defaultBranch} for ${repoName}`);
+		});
+	});
 });
