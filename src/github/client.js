@@ -62,6 +62,27 @@ function GithubClient(url, privateToken) {
 			});
 	};
 
+	this.updateAutoDeleteHeadBranches = function (owner, repoName) {
+		console.info('Configuring auto delete head branches on merge on %s', repoName);
+		const path = `repos/${owner}/${repoName}`;
+		const data = {
+			'delete_branch_on_merge': true
+		};
+		let params = this._getParams('PATCH', path);
+		params.data = data;
+		console.debug(`Path : ${path}`);
+		console.debug(`Request Data : ${JSON.stringify(params)}`);
+
+		return axios(params)
+			.then(response => {
+				return new Repository(response.data.name, response.data.clone_url,
+					response.data.delete_branch_on_merge);
+			}).catch((error) => {
+				console.error('Error updating auto delete head branches on %s: %s', repoName, error.message);
+				throw new Error(`Unable to update auto delete head branches on ${repoName}`);
+			});
+	};
+
 	this._getParams = function (method, path) {
 		return {
 			url: `https://${this.url}/${path}`,

@@ -9,14 +9,15 @@ const git = require('isomorphic-git');
 const config = require('config');
 
 const GitlabProject = require('../../src/gitlab/model/project.js');
+const GithubRepository = require('../../src/github/model/repository.js');
 const Migrate = require('../../src/migrate.js');
-const githubRepoDetails = require('../resources/github/repoDetails.json');
 const gitlabGroupDetails = require('../resources/gitlab/groupDetails.json');
 const gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json');
 const gitlabSubgroup1Details = require('../resources/gitlab/subgroup1Details.json');
 const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.json');
 const gitlabArchiveResponse = require('../resources/gitlab/archiveResponse.json');
-const updateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json');
+const githubRepoDetails = require('../resources/github/repoDetails.json');
+const githubUpdateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json');
 
 describe('migrate', function() {
 	const migrate = new Migrate();
@@ -246,7 +247,7 @@ describe('migrate', function() {
 				'dismiss_stale_reviews': dismiss_stale_reviews,
 				'enforce_admins': enforce_admins
 			};
-			githubApi.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			githubApi.put(`/repos/${owner}/${repoName}/branches/${branchName}/protection`).reply(200, githubUpdateBranchProtectionResponse);
 			//when
 			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName], branchName, rules);
 			//then
@@ -275,8 +276,8 @@ describe('migrate', function() {
 				'dismiss_stale_reviews': dismiss_stale_reviews,
 				'enforce_admins': enforce_admins
 			};
-			githubApi.put(`/repos/${owner}/${repoName1}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
-			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			githubApi.put(`/repos/${owner}/${repoName1}/branches/${branchName}/protection`).reply(200, githubUpdateBranchProtectionResponse);
+			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, githubUpdateBranchProtectionResponse);
 			//when
 			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName1, repoName2], branchName, rules);
 			//then
@@ -311,7 +312,7 @@ describe('migrate', function() {
 				'enforce_admins': enforce_admins
 			};
 			githubApi.put(`/repos/${owner}/${repoName1}/branches/${branchName}/protection`).reply(415);
-			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, updateBranchProtectionResponse);
+			githubApi.put(`/repos/${owner}/${repoName2}/branches/${branchName}/protection`).reply(200, githubUpdateBranchProtectionResponse);
 			//when
 			const res = await migrate.configureGithubBranchProtectionRule(owner, [repoName1, repoName2], branchName, rules);
 			//then
@@ -358,11 +359,68 @@ describe('migrate', function() {
 			//when
 			const res = await migrate.archiveGitlabProject([nonExistingProjectPath, existingProjectPath]);
 			//then
-			console.log('**********');
-			console.log(res);
 			expect(res[1].status).to.equal(200);
 			expect(res[1].data.path_with_namespace).to.equal(existingProjectPath);
 			expect(res[1].data.archived).to.be.true;
+		});
+	});
+	describe('update auto delete head branches', function () {
+		it('should update auto delete head branches for the given repo', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName = 'some-repo';
+			githubApi.patch(`/repos/${owner}/${repoName}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName]);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(1);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('clone_url');
+			repositoryList[0].should.have.property('delete_branch_on_merge');
+			repositoryList[0]['name'].should.equal(repoName);
+			repositoryList[0]['delete_branch_on_merge'].should.be.true;
+		});
+		it('should update auto delete head branches for multiple github repos', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(200, githubRepoDetails);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2]);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[0].should.be.a('object');
+			repositoryList[0].should.be.instanceof(GithubRepository);
+			repositoryList[0].should.have.property('name');
+			repositoryList[0].should.have.property('clone_url');
+			repositoryList[0].should.have.property('delete_branch_on_merge');
+			repositoryList[0]['delete_branch_on_merge'].should.be.true;
+			repositoryList[1]['delete_branch_on_merge'].should.be.true;
+		});
+		it('should proceed for updating auto delete head branches for other repo(s) when error received for anyone', async () => {
+			//given
+			const owner = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			githubApi.patch(`/repos/${owner}/${repoName1}`).reply(404);
+			githubApi.patch(`/repos/${owner}/${repoName2}`).reply(200, githubRepoDetails);
+			//when
+			const repositoryList = await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, [repoName1, repoName2]);
+			//then
+			repositoryList.should.be.an('array');
+			repositoryList.should.have.lengthOf(2);
+			repositoryList[1].should.be.a('object');
+			repositoryList[1].should.be.instanceof(GithubRepository);
+			repositoryList[1].should.have.property('name');
+			repositoryList[1].should.have.property('clone_url');
+			repositoryList[1].should.have.property('delete_branch_on_merge');
+			repositoryList[1]['delete_branch_on_merge'].should.be.true;
 		});
 	});
 });

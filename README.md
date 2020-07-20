@@ -22,7 +22,7 @@ $ npm --version
 ### Installation
 
 ```bash
-$ npm build
+$ npm run build
 ```
 
 ### Setup config
@@ -77,6 +77,13 @@ $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-
 $ gl2h protect-branch -c /path/to/my/branchProtectionTemplate.yml my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2 ... 
 ```
 
+### Enable automatically delete head branches on GitHub  
+
+```bash
+$ gl2h auto-delete-head-branches my-foo-org my-bar-repo
+$ gl2h auto-delete-head-branches my-foo-org my-bar-repo-1 my-bar-repo-2 ...
+```
+
 ### Archive project on GitLab
 
 ```bash
@@ -86,10 +93,10 @@ $ gl2h archive-repo my-project-path-1 my-project-path-2 ...
 
 ### Clean up
 
-After successful migration, this will clean up installed binary for migration.
+Clean up any installed binary for migration
 
 ```bash
-$ npm unlink
+$ npm run clean
 ```
 
 ### Creating a private token for GitHub
