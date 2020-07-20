@@ -165,8 +165,8 @@ describe('Git', function() {
 
 			//then
 			sinon.assert.calledWith(listBranchesStub, {fs, dir: repoPathOnLocal, remote: remoteName});
-			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'master'});
-			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'extra-branch'});
+			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'master', remote: remoteName});
+			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'extra-branch', remote: remoteName});
 			assert.deepEqual(returnedBranchesList, ['master', 'extra-branch']);
 		});
 		it('should not attempt to checkout or list HEAD branch', async function() {
@@ -180,9 +180,9 @@ describe('Git', function() {
 
 			//then
 			sinon.assert.calledWith(listBranchesStub, {fs, dir: repoPathOnLocal, remote: remoteName});
-			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'master'});
-			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'extra-branch'});
-			sinon.assert.neverCalledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'HEAD'});
+			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'master', remote: remoteName});
+			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'extra-branch', remote: remoteName});
+			sinon.assert.neverCalledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'HEAD', remote: remoteName});
 			assert.deepEqual(returnedBranchesList, ['master', 'extra-branch']);
 		});
 	});
