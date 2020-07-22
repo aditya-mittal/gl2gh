@@ -22,7 +22,7 @@ function GitClient(gitlabUserName, gitlabToken, githubToken) {
 		const branches = await git.listBranches({fs, dir: repoPathOnLocal, remote: remoteName});
 		const filteredBranches = branches.filter(branch => branch !== 'HEAD');
 		for (const branch of filteredBranches) {
-			await git.checkout({fs, dir: repoPathOnLocal, ref: branch});
+			await git.checkout({fs, dir: repoPathOnLocal, ref: branch, remote: remoteName});
 		}
 		return filteredBranches;
 	};

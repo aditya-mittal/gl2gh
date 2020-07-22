@@ -1,5 +1,6 @@
 const chai = require('chai');
 const assert = chai.assert;
+const expect = chai.expect;
 const nock = require('nock');
 const config = require('config');
 
@@ -9,6 +10,7 @@ const Subgroup = require('../../../src/gitlab/model/subgroup.js');
 const groupDetails = require('../../resources/gitlab/groupDetails.json');
 const subgroupsList = require('../../resources/gitlab/subgroupsList.json');
 const subgroupDetails = require('../../resources/gitlab/subgroup1Details.json');
+const archiveResponse = require('../../resources/gitlab/archiveResponse.json');
 
 describe('Gitlab client', function() {
 	const GITLAB_URL = config.get('gl2gh.gitlab.url');
@@ -166,6 +168,39 @@ describe('Gitlab client', function() {
 				Error,
 				`Error while fetching subgroup ${subgroupName}`
 			);
+		});
+	});
+	describe('#archiveRepo', function () {
+		it('should archive the project for the given project path', async () => {
+			//given
+			const projectPath = 'foo/sample-project-site';
+			api.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').reply(200, archiveResponse);
+			//when
+			const response = await gitlabClient.archiveProject(projectPath);
+			//then
+			const archiveResponseObj = response.data;
+			expect(archiveResponseObj.path_with_namespace).to.equal(projectPath);
+			expect(archiveResponseObj.archived).to.be.true;
+		});
+		it('should throw error when project path not found', async () => {
+			//given
+			const projectPath = 'foo/invalid-project';
+			api.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').reply(404);
+			//when
+			return assert.isRejected(
+				gitlabClient.archiveProject(projectPath),
+				Error,
+				`No project found in the path ${projectPath}, for archiving`);
+		});
+		it('should throw error when error obtained while archiving project', async () => {
+			//given
+			const projectPath = 'foo/invalid-project';
+			api.post('/api/v4/projects/' + encodeURIComponent(projectPath) + '/archive').replyWithError('Some error occurred while archiving project');
+			//when
+			return assert.isRejected(
+				gitlabClient.archiveProject(projectPath),
+				Error,
+				'Error while archiving project foo/invalid-project');
 		});
 	});
 });
