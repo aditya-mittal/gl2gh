@@ -1,0 +1,6 @@
+repo_name:
+  secret: sample_secret
+  events:
+    - push
+    - pull_request
+  payloadUrl: payload_url

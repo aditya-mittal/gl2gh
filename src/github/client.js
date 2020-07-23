@@ -1,5 +1,6 @@
 const axios = require('axios').default;
 const Repository = require('./model/repository.js');
+const WebhookError = require('./error/webhookError.js');
 
 function GithubClient(url, username, privateToken) {
 	this.url = url;
@@ -130,6 +131,37 @@ function GithubClient(url, username, privateToken) {
 			}).catch((error) => {
 				console.error(error);
 				throw new Error(`Unable to set default branch to ${defaultBranchName} for ${repoName}`);
+			});
+	};
+
+	this.createWebhook = function (repoName, secret, events, payloadUrl, orgName) {
+		var path = `repos/${orgName}/${repoName}/hooks`;
+		var data = {
+			'events': events,
+			'config': {
+				'url': payloadUrl,
+				'content_type': 'json',
+				'insecure_ssl': '0',
+				'secret': secret
+			}
+		};
+
+		var params = this._getParams('POST', path);
+		params.data = data;
+
+		return axios(params)
+			.then(response => {
+				console.info('Created webhook for %s', repoName);
+				return response;
+			})
+			.catch((error) => {
+				console.error(error);
+				if (error.response.status === 422) {
+					throw new WebhookError(error.response.status, `Webhook already exists for repo ${repoName}`);
+				} else {
+					console.error(error);
+					throw new Error(`Error creating webhook for repo ${repoName}: ${error}`);
+				}
 			});
 	};
 

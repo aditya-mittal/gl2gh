@@ -10,8 +10,10 @@ const config = require('config');
 const GithubClient = require('../../../src/github/client.js');
 const Repository = require('../../../src/github/model/repository.js');
 const BranchProtectionRule = require('../../../src/github/model/branchProtectionRule.js');
+const WebhookError = require('../../../src/github/error/webhookError.js');
 const repoDetails = require('../../resources/github/repoDetails.json');
 const updateBranchProtectionResponse = require('../../resources/github/updateBranchProtectionResponse.json');
+const createWebhookResponse = require('../../resources/github/createWebhookResponse.json');
 
 describe('Github client', function() {
 	const GITHUB_API_URL = config.get('gl2gh.github.url');
@@ -276,5 +278,60 @@ describe('Github client', function() {
 				Error,
 				`Unable to set default branch to ${defaultBranch} for ${repoName}`);
 		});
+	});
+
+	describe.only('#create webhooks', () => {
+		api = nock(
+			`https:// ${GITHUB_API_URL}`, {
+				reqHeaders: {
+					'Content-Type': 'application/json',
+					'Authorization': `token ${GITHUB_PRIVATE_TOKEN}`
+				}
+			});
+
+		afterEach(() => {
+			nock.cleanAll();
+		});
+
+		it('should create webhook', async() => {
+			//given
+			const repoName = 'test-webhooks';
+			const secret = 'webhooks-secret';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			api.post(`/repos/${orgName}/${repoName}/hooks`).reply(201, createWebhookResponse);
+		
+			//when
+			const res = await githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName);
+		
+			//then
+			expect(res.status).to.equal(201);
+			expect(res.data.events).to.eql(['pull_request','push']);
+		});
+
+		it('should throw WebhookError when creating a webhook returns 422', async() => {
+			//given
+			const repoName = 'test-webhooks';
+			const secret = 'webhooks-secret';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			api.post(`/repos/${orgName}/${repoName}/hooks`).reply(422, createWebhookResponse);
+			
+			//when
+			//then
+			return assert.isRejected(
+				githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName),
+				WebhookError, `Webhook already exists for repo ${repoName}`
+			);
+		});
+
 	});
 });
