@@ -339,7 +339,7 @@ describe('Tests for cli', () => {
 			expect(consoleOutput).to.eql(['Created webhook for repo some-repo with id: 224234647']);
 		});
 
-		it('should throw error while extracting secret and creating webhook', async () => {
+		it('should throw error while creating webhook', async () => {
 			//given
 			const configFile = 'test/resources/github/webhookTemplate.yml';
 			const events = ['push', 'pull_request'];
