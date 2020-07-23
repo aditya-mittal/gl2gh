@@ -19,6 +19,7 @@ const gitlabSubgroup2Details = require('../resources/gitlab/subgroup2Details.jso
 const gitlabArchiveResponse = require('../resources/gitlab/archiveResponse.json');
 const githubRepoDetails = require('../resources/github/repoDetails.json');
 const githubUpdateBranchProtectionResponse = require('../resources/github/updateBranchProtectionResponse.json');
+const createWebhookResponse = require('../resources/github/createWebhookResponse.json');
 
 describe('migrate', function() {
 	const migrate = new Migrate();
@@ -555,5 +556,68 @@ describe('migrate', function() {
 			repositoryList[1].should.have.property('default_branch');
 			repositoryList[1]['default_branch'].should.equal(defaultBranchName);
 		});
+	});
+
+	describe('create github webhooks', function () {
+		it('should extract secret and create webhook', async() => {
+			//given
+			const repoName = 'some-repo';
+			const secret = 'webhook-secret';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			githubApi.post(
+				`/repos/${orgName}/${repoName}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret)
+			)
+				.reply(201, createWebhookResponse);
+	
+			//when
+			const res = await migrate.createWebhook(secret, events, payloadUrl, orgName, repoName);
+	
+			//then
+			expect(res.status).to.equal(201);
+		});
+	
+		it('should throw error while extracting secret and creating webhook', async() => {
+			//given
+			const repoName = 'second-repo';
+			const secret = 'webhook-secret-2';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			var error = 'Error: Request failed with status code 500';
+	
+			githubApi.post(
+				`/repos/${orgName}/${repoName}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret))
+				.reply(500, createWebhookResponse);
+	
+			//when
+	
+			//then
+			return assert.isRejected(
+				migrate.createWebhook(secret, events, payloadUrl, orgName, repoName),
+				Error, `Error creating webhook for repo ${repoName}: ${error}`
+			);
+		});
+	
+		let _getWebhooksPayloadFor = function (events, payloadUrl, secret) {
+			return {
+				'events': events,
+				'config': {
+					'url': payloadUrl,
+					'content_type': 'json',
+					'insecure_ssl': '0',
+					'secret': secret
+				}
+			};
+		};
 	});
 });

@@ -148,7 +148,6 @@ function GithubClient(url, username, privateToken) {
 
 		var params = this._getParams('POST', path);
 		params.data = data;
-
 		return axios(params)
 			.then(response => {
 				console.info('Created webhook for %s', repoName);

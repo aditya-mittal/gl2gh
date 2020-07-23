@@ -1,5 +1,5 @@
 some-repo:
-  secret: sample_secret
+  secret: some-secret
   events:
     - push
     - pull_request

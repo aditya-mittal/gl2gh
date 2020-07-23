@@ -332,6 +332,5 @@ describe('Github client', function() {
 				WebhookError, `Webhook already exists for repo ${repoName}`
 			);
 		});
-
 	});
 });

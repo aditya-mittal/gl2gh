@@ -6,6 +6,8 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
+const WebhookError = require('../../src/github/error/webhookError.js');
+
 
 describe('Tests for cli', () => {
 	const migrate = new Migrate();
@@ -296,6 +298,89 @@ describe('Tests for cli', () => {
 			//then
 			sinon.assert.calledWith(migrateStub, [projectPath]);
 			expect(consoleError).to.eql([errorMessage]);
+		});
+	});
+	describe('create webhooks tests', function () {
+		const createWebhookResponse = require('../resources/github/createWebhookResponse.json');
+		const httpResponse = {
+			status: 200,
+			data: createWebhookResponse
+		};
+		let createWebhookStub;
+		before(() => {
+			migrateStub = sinon.stub(migrate, 'createWebhook');
+			createWebhookStub = function StubMigrate() {
+				this.createWebhook = migrateStub;
+			};
+		});
+		after(() => {
+			sinon.restore();
+		});
+
+		it('should create webhook', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const secret = 'some-secret';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const orgName = 'some-org';
+			const repoName = 'some-repo';
+			migrateStub.returns(httpResponse);
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.calledWith(migrateStub, secret, events, payloadUrl, orgName, repoName);
+			expect(consoleOutput).to.eql(['Created webhook for repo some-repo with id: 224234647']);
+		});
+
+		it('should throw error while extracting secret and creating webhook', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const events = ['push', 'pull_request'];
+			const secret = 'some-secret';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const orgName = 'some-org';
+			const repoName = 'some-repo';
+			const errorMessage = `Error creating webhook for repo ${repoName}`;
+			migrateStub.throws(new Error(errorMessage));
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.calledWith(migrateStub, secret, events, payloadUrl, orgName, repoName);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+
+		it('should handle error gracefully for an existing webhook', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const orgName = 'some-org';
+			const repoName = 'some-repo';
+			const secret = 'some-secret';
+
+			migrateStub.returns(new WebhookError(422, `Webhook already exists for repo ${repoName}`));
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.calledWith(migrateStub, secret, events, payloadUrl, orgName, repoName);
+			expect(consoleOutput).to.eql([`Webhook already exists for repo ${repoName}`]);
+			expect(consoleError).to.eql([]);
 		});
 	});
 });
