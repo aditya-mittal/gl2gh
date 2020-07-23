@@ -280,7 +280,7 @@ describe('Github client', function() {
 		});
 	});
 
-	describe.only('#create webhooks', () => {
+	describe('#create webhooks', () => {
 		api = nock(
 			`https:// ${GITHUB_API_URL}`, {
 				reqHeaders: {
