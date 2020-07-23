@@ -582,7 +582,7 @@ describe('migrate', function() {
 			expect(res.status).to.equal(201);
 		});
 	
-		it('should throw error while extracting secret and creating webhook', async() => {
+		it('should throw error while creating webhook', async() => {
 			//given
 			const repoName = 'second-repo';
 			const secret = 'webhook-secret-2';
