@@ -27,6 +27,10 @@ function GitClient(gitlabUserName, gitlabToken, githubToken) {
 		return filteredBranches;
 	};
 
+	this.listTags = async function(repoPathOnLocal) {
+		return git.listTags({fs, dir: repoPathOnLocal});
+	};
+
 	this.push = function(repoPathOnLocal, remoteName, branchName) {
 		return git.push({fs, http, dir: repoPathOnLocal, remote: remoteName,
 			ref: branchName, onAuth: () => ({ username: this.githubToken }),
