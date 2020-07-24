@@ -4,4 +4,3 @@ test_report.xml
 config/default.yml
 *.iml
 .nyc_output
-coverage
