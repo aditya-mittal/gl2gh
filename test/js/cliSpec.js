@@ -5,6 +5,7 @@ const yaml = require('js-yaml');
 const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
+const GitlabProject = require('../../src/gitlab/model/project.js');
 const Migrate = require('../../src/migrate.js');
 
 describe('Tests for cli', () => {
@@ -37,15 +38,36 @@ describe('Tests for cli', () => {
 		after(() => {
 			sinon.restore();
 		});
-		it('should list projects for a specific GitLab group ordered alphabetically', async function () {
+		it('should list projects in json format for a specific GitLab group ordered alphabetically', async function () {
 			//given
 			const gitlabGroupName = 'FOO';
 			const projectNameFilter = 'project';
+			const project1 = new GitlabProject('project-1', 'description', 'https://gitlab.com/FOO/project-1.git');
+			const project2 = new GitlabProject('project-2', 'description', 'https://gitlab.com/FOO/project-2.git');
+			const project3 = new GitlabProject('project-3', 'description', 'https://gitlab.com/FOO/project-3.git');
+			migrateStub.returns([project1, project2, project3]);
 			//when
 			process.argv = `node ../../src/cli.js list --starts-with ${projectNameFilter} ${gitlabGroupName}`.split(' ');
 			await proxyquire('../../src/cli.js', { './migrate': getListOfAllProjectsToMigrateStub });
 			//then
 			sinon.assert.calledWith(migrateStub, gitlabGroupName, projectNameFilter);
+			expect(consoleOutput).to.eql([JSON.stringify(project1), JSON.stringify(project2), JSON.stringify(project3)]);
+		});
+		it('should list projects in text format for a specific GitLab group ordered alphabetically', async function () {
+			//given
+			const gitlabGroupName = 'FOO';
+			const projectNameFilter = 'project';
+			const outputType = 'text';
+			const project1 = new GitlabProject('project-1', 'description', 'https://gitlab.com/FOO/project-1.git');
+			const project2 = new GitlabProject('project-2', 'description', 'https://gitlab.com/FOO/project-2.git');
+			const project3 = new GitlabProject('project-3', 'description', 'https://gitlab.com/FOO/project-3.git');
+			migrateStub.returns([project1, project2, project3]);
+			//when
+			process.argv = `node ../../src/cli.js list --output ${outputType} --starts-with ${projectNameFilter} ${gitlabGroupName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': getListOfAllProjectsToMigrateStub });
+			//then
+			sinon.assert.calledWith(migrateStub, gitlabGroupName, projectNameFilter);
+			expect(consoleOutput).to.eql([project1.toString(), project2.toString(), project3.toString()]);
 		});
 		it('should handle error gracefully when listing projects for specific group', async function () {
 			//given
@@ -103,6 +125,20 @@ describe('Tests for cli', () => {
 			//then
 			sinon.assert.callCount(migrateStub, 1);
 			sinon.assert.calledWithExactly(migrateStub, gitlabGroupName, githubOrgName, projectNameFilter);
+		});
+		it('should handle error gracefully when copying content', async function() {
+			//given
+			const gitlabGroupName = 'FOO';
+			const githubOrgName = 'BAR';
+			const errorMessage = 'Some error occurred while copying content of projects';
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
+			//when
+			process.argv = `node ../../src/cli.js copy-content ${gitlabGroupName} --github-org ${githubOrgName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': copyContentFromGitlabToGithubStub });
+			//then
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWithExactly(migrateStub, gitlabGroupName, githubOrgName, '');
+			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
 	describe('Configure branch protection rules for a specific branch', function() {

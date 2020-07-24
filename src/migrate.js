@@ -55,36 +55,28 @@ function Migrate() {
 	this.configureGithubBranchProtectionRule = function(owner, repoNames, branchName, rules) {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
-				.catch((error) => {
-					console.error(error.message);
-				});
+				.catch((error) => console.error(error.message));
 		}));
 	};
 
 	this.updateAutoDeleteHeadBranchesOnGithub = function (owner, repoNames) {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.updateAutoDeleteHeadBranches(owner, repoName)
-				.catch((error) => {
-					console.error(error.message);
-				});
+				.catch((error) => console.error(error.message));
 		}));
 	};
 
 	this.updateDefaultBranchOnGithub = function (owner, repoNames, branchName) {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.updateDefaultBranch(owner, repoName, branchName)
-				.catch((error) => {
-					console.error(error.message);
-				});
+				.catch((error) => console.error(error.message));
 		}));
 	};
 
 	this.archiveGitlabProject = function(projectPaths) {
 		return Promise.all(projectPaths.map((projectPath) => {
 			return gitlabClient.archiveProject(projectPath)
-				.catch((error) => {
-					console.error(error.message);
-				});
+				.catch((error) => console.error(error.message));
 		}));
 	};
 
