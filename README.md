@@ -1,6 +1,7 @@
 # Migrate GitLab repo(s) to GitHub
 
 ![Build Status](https://github.com/aditya-mittal/gl2gh/workflows/build/badge.svg)
+[![codecov](https://codecov.io/gh/aditya-mittal/gl2gh/branch/master/graph/badge.svg)](https://codecov.io/gh/aditya-mittal/gl2gh)
 
 Migrate one or more projects from GitLab to GitHub. 
 - For developer instructions, see the [developer README](DEVELOP.md)
