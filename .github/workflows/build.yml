@@ -30,4 +30,4 @@ jobs:
     - run: npm test
     - run: npm run coverage
       env:
-        CODECOV_REPO_TOKEN: ${{ secrets.CODECOV_REPO_TOKEN }}
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
