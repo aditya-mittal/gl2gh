@@ -28,6 +28,3 @@ jobs:
     - run: npm run build --if-present
     - run: npm run lint
     - run: npm test
-    - run: npm run coverage
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}

@@ -6,10 +6,9 @@ describe('Project', function() {
 	it('must have name and http_url', function() {
 		//given
 		const name = 'repository-1';
-		const description = 'xyz-description';
 		const http_url_to_repo = 'https://gitlab.com/FOO/repository-1.git';
 		//when
-		const project = new Project(name, description, http_url_to_repo);
+		const project = new Project(name, http_url_to_repo);
 		//then
 		project.should.be.a('object');
 		project.should.be.instanceof(Project);
@@ -18,33 +17,22 @@ describe('Project', function() {
 		project.should.have.property('description');
 		project.should.have.all.keys('name', 'description', 'http_url_to_repo');
 	});
+
 	it('should check if project starts with specific prefix', function() {
 		//given
 		let name = 'xyz-repository-1';
-		const description = 'xyz-description';
 		const http_url_to_repo = 'https://gitlab.com/FOO/repository-1.git';
-		let project = new Project(name, description, http_url_to_repo);
+		let project = new Project(name, http_url_to_repo);
 		//when
 		let doesStartsWithXyz = project.startsWith('xyz');
 		//then
 		expect(doesStartsWithXyz).to.be.true;
 		//given
 		name = 'abc-repository-1';
-		project = new Project(name, description, http_url_to_repo);
+		project = new Project(name, http_url_to_repo);
 		//when
 		doesStartsWithXyz = project.startsWith('xyz');
 		//then
 		expect(doesStartsWithXyz).to.be.false;
-	});
-	it('must return proper representation of project with #toString()', function() {
-		//given
-		const name = 'xyz-repository-1';
-		const description = 'xyz-description';
-		const http_url_to_repo = 'https://gitlab.com/FOO/repository-1.git';
-		const project = new Project(name, description, http_url_to_repo);
-		//when
-		const toStringRepresentation = project.toString();
-		//then
-		expect(toStringRepresentation).to.be.equal(`${name}, ${description}, ${http_url_to_repo}`);
 	});
 });
