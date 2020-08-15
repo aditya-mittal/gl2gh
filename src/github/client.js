@@ -1,6 +1,5 @@
 const axios = require('axios').default;
 const Repository = require('./model/repository.js');
-const WebhookError = require('./error/webhookError.js');
 
 function GithubClient(url, username, privateToken) {
 	this.url = url;
