@@ -5,6 +5,7 @@ const yaml = require('js-yaml');
 const fs   = require('fs');
 
 const Migrate = require('./migrate.js');
+const WebhookConfig = require('./github/model/webhookConfig.js');
 
 const migrate = new Migrate();
 const program = new Command();
@@ -81,9 +82,10 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 	}
 }
 
-async function createWebhook(orgName, repoName, webhookConfig) {
+async function createWebhook(orgName, repoName, cliWebhookConfig) {
 	try {
-		const response = await migrate.createWebhook(webhookConfig.secret, webhookConfig.events, webhookConfig.payloadUrl, orgName, repoName);
+		const webhookConfig = new WebhookConfig(repoName, cliWebhookConfig.secret, cliWebhookConfig.events, cliWebhookConfig.payloadUrl);
+		const response = await migrate.createWebhook(webhookConfig, orgName);
 		console.info(`Created webhook for repo ${repoName} with id: ${response.data.id}`);
 		return response;
 	} catch (error) {

@@ -88,8 +88,8 @@ function Migrate() {
 		}));
 	};
 
-	this.createWebhook = async function(secret, events, payloadUrl, orgName, repoName) {
-		return githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName);
+	this.createWebhook = async function(webhookConfig, orgName) {
+		return githubClient.createWebhook(webhookConfig.repoName, webhookConfig.secret, webhookConfig.events, webhookConfig.payloadUrl, orgName);
 	};
 
 	var _migrateProjectsToGithub = function(self, projects, githubOrgName) {

@@ -6,6 +6,7 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
+const WebhookConfig = require('../../src/github/model/webhookConfig.js');
 
 describe('Tests for cli', () => {
 	const migrate = new Migrate();
@@ -299,7 +300,7 @@ describe('Tests for cli', () => {
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});
-	
+
 	describe('Create webhooks', function () {
 		const createWebhookResponse = require('../resources/github/createWebhookResponse.json');
 		const httpResponse = {
@@ -317,7 +318,7 @@ describe('Tests for cli', () => {
 			sinon.restore();
 		});
 
-		it('should create webhook', async () => {
+		it('should create webhook for a single repo', async () => {
 			//given
 			const configFile = 'test/resources/github/webhookTemplate.yml';
 			const events = [
@@ -328,6 +329,8 @@ describe('Tests for cli', () => {
 			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
 			const orgName = 'some-org';
 			const repoName = 'some-repo';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
+
 			migrateStub.returns(httpResponse);
 
 			//when
@@ -335,7 +338,7 @@ describe('Tests for cli', () => {
 			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
 
 			//then
-			sinon.assert.calledWith(migrateStub, secret, events, payloadUrl, orgName, repoName);
+			sinon.assert.calledWith(migrateStub, webhookConfig, orgName);
 			expect(consoleOutput).to.eql(['Created webhook for repo some-repo with id: 224234647']);
 		});
 
@@ -348,6 +351,9 @@ describe('Tests for cli', () => {
 			const orgName = 'some-org';
 			const repoName = 'some-repo';
 			const errorMessage = `Error creating webhook for repo ${repoName}`;
+
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
+
 			migrateStub.throws(new Error(errorMessage));
 
 			//when
@@ -355,7 +361,7 @@ describe('Tests for cli', () => {
 			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
 
 			//then
-			sinon.assert.calledWith(migrateStub, secret, events, payloadUrl, orgName, repoName);
+			sinon.assert.calledWith(migrateStub, webhookConfig, orgName);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});

@@ -11,6 +11,7 @@ const config = require('config');
 
 const GitlabProject = require('../../src/gitlab/model/project.js');
 const GithubRepository = require('../../src/github/model/repository.js');
+const WebhookConfig = require('../../src/github/model/webhookConfig.js');
 const Migrate = require('../../src/migrate.js');
 const gitlabGroupDetails = require('../resources/gitlab/groupDetails.json');
 const gitlabSubgroupsList = require('../resources/gitlab/subgroupsList.json');
@@ -598,7 +599,8 @@ describe('migrate', function() {
 	});
 
 	describe('create github webhooks', function () {
-		it('should create webhook', async() => {
+
+		it('should create webhook for a single', async() => {
 			//given
 			const repoName = 'some-repo';
 			const secret = 'webhook-secret';
@@ -608,14 +610,15 @@ describe('migrate', function() {
 				'pull_request'
 			];
 			const orgName = 'some-org';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
+
 			githubApi.post(
 				`/repos/${orgName}/${repoName}/hooks`,
 				_getWebhooksPayloadFor(events, payloadUrl, secret)
-			)
-				.reply(201, createWebhookResponse);
+			).reply(201, createWebhookResponse);
 	
 			//when
-			const res = await migrate.createWebhook(secret, events, payloadUrl, orgName, repoName);
+			const res = await migrate.createWebhook(webhookConfig, orgName);
 	
 			//then
 			expect(res.status).to.equal(201);
@@ -631,8 +634,9 @@ describe('migrate', function() {
 				'pull_request'
 			];
 			const orgName = 'some-org';
-			var error = 'Error: Request failed with status code 500';
-	
+			const error = 'Error: Request failed with status code 500';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
+
 			githubApi.post(
 				`/repos/${orgName}/${repoName}/hooks`,
 				_getWebhooksPayloadFor(events, payloadUrl, secret))
@@ -642,7 +646,7 @@ describe('migrate', function() {
 	
 			//then
 			return assert.isRejected(
-				migrate.createWebhook(secret, events, payloadUrl, orgName, repoName),
+				migrate.createWebhook(webhookConfig, orgName),
 				Error, `Error creating webhook for repo ${repoName}: ${error}`
 			);
 		});
