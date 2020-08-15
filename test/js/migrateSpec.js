@@ -35,12 +35,14 @@ describe('migrate', function() {
 	let gitCreateRemoteStub;
 	let gitPushToRemoteStub;
 	let gitListBranchesStub;
+	let gitListTagsStub;
 	let gitCheckoutStub;
 	let rmdirStub;
 	beforeEach(() => {
 		gitCloneStub = sinon.stub(git, 'clone');
 		gitCreateRemoteStub = sinon.stub(git, 'addRemote');
 		gitListBranchesStub = sinon.stub(git, 'listBranches');
+		gitListTagsStub = sinon.stub(git, 'listTags');
 		gitCheckoutStub = sinon.stub(git, 'checkout');
 		gitPushToRemoteStub = sinon.stub(git, 'push');
 		rmdirStub = sinon.stub(fs, 'rmdirSync');
@@ -80,6 +82,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 			//when
 			const result = await migrate.migrateToGithub(gitlabGroupName, githubOrgName);
@@ -107,6 +110,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 			//when
 			const result = await migrate.migrateToGithub(gitlabGroupName);
@@ -197,6 +201,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 
 			//when
@@ -226,6 +231,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 
 			//when
@@ -238,6 +244,37 @@ describe('migrate', function() {
 			sinon.assert.callCount(gitListBranchesStub, 8);
 			sinon.assert.callCount(gitCheckoutStub, 16);
 			sinon.assert.callCount(gitPushToRemoteStub, 16);
+			sinon.assert.callCount(rmdirStub, 8);
+			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
+		});
+		it('should copy all tags of all repos from gitlab to github under specified github org', async () => {
+			//given
+			const gitlabGroupName = 'FOO';
+			const githubOrgName = 'BAR';
+			gitlabApi.get('/api/v4/groups/' + gitlabGroupName).times(2).reply(200, gitlabGroupDetails);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+'/subgroups').reply(200, gitlabSubgroupsList);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup1').reply(200, gitlabSubgroup1Details);
+			gitlabApi.get('/api/v4/groups/'+gitlabGroupName+encodeURIComponent('/')+'subgroup2').reply(200, gitlabSubgroup2Details);
+			githubApi.post(`/orgs/${githubOrgName}/repos`).times(8).reply(201, githubRepoDetails);
+			githubApi.patch(RegExp('/repos\\/' + githubOrgName + '\\/[^\\/]+$')).times(8).reply(200, githubRepoDetails);
+			gitCloneStub.returns(Promise.resolve());
+			gitCreateRemoteStub.returns(Promise.resolve());
+			gitListBranchesStub.returns(Promise.resolve(['master', 'extra-branch']));
+			gitListTagsStub.returns(Promise.resolve(['foo-tag', 'bar-tag']));
+			gitCheckoutStub.returns(Promise.resolve());
+			gitPushToRemoteStub.returns(Promise.resolve());
+
+			//when
+			const result = await migrate.copyContentFromGitlabToGithub(gitlabGroupName, githubOrgName);
+
+			//then
+			expect(result).to.equal(0);
+			sinon.assert.callCount(gitCloneStub, 8);
+			sinon.assert.callCount(gitCreateRemoteStub, 8);
+			sinon.assert.callCount(gitListBranchesStub, 8);
+			sinon.assert.callCount(gitCheckoutStub, 16);
+			sinon.assert.callCount(gitListTagsStub, 8);
+			sinon.assert.callCount(gitPushToRemoteStub, 32);
 			sinon.assert.callCount(rmdirStub, 8);
 			sinon.assert.calledWith(rmdirStub, sinon.match.string, sinon.match({recursive: true}));
 		});
@@ -255,6 +292,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 
 			//when
@@ -285,6 +323,7 @@ describe('migrate', function() {
 			gitCreateRemoteStub.returns(Promise.resolve());
 			gitListBranchesStub.returns(Promise.resolve(['master']));
 			gitCheckoutStub.returns(Promise.resolve());
+			gitListTagsStub.returns(Promise.resolve([]));
 			gitPushToRemoteStub.returns(Promise.resolve());
 
 			//when

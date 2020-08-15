@@ -73,7 +73,7 @@ describe('Git', function() {
 			//then
 			assert(git.addRemote.calledWithMatch({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl}));
 		});
-		it('should handle error when cloning the repo', async function() {
+		it('should handle error when adding the remote', async function() {
 			//given
 			const httpsRemoteUrl = 'https://github.com/new-repo.git';
 			const remoteName = 'new_origin';
@@ -130,7 +130,7 @@ describe('Git', function() {
 			}
 		});
 	});
-	describe('#list', function () {
+	describe('#list', function() {
 		let listBranchesStub;
 		let checkoutStub;
 		before(() => {
@@ -184,6 +184,27 @@ describe('Git', function() {
 			sinon.assert.calledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'extra-branch', remote: remoteName});
 			sinon.assert.neverCalledWith(checkoutStub, {fs, dir: repoPathOnLocal, ref: 'HEAD', remote: remoteName});
 			assert.deepEqual(returnedBranchesList, ['master', 'extra-branch']);
+		});
+	});
+	describe('#listTags', function() {
+		let listTagsStub;
+		before(() => {
+			listTagsStub = sinon.stub(git, 'listTags');
+		});
+		after(() => {
+			listTagsStub.restore();
+		});
+		it('should list the tags for an already cloned repo', async function() {
+			//given
+			const repo_path_on_local = path.join(process.cwd(), 'tmp','migrate', 'some_repo');
+			listTagsStub.withArgs({fs, dir: repo_path_on_local}).returns(Promise.resolve(['foo-tag', 'bar-tag']));
+
+			//when
+			const returnedTagsList = await gitClient.listTags(repo_path_on_local);
+
+			//then
+			sinon.assert.calledWith(listTagsStub, {fs, dir: repo_path_on_local});
+			assert.deepEqual(returnedTagsList, ['foo-tag', 'bar-tag']);
 		});
 	});
 });

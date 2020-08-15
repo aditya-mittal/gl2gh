@@ -151,6 +151,14 @@ function Migrate() {
 					console.warn(msg);
 				});
 		});
+		const tags = await gitClient.listTags(pathToCloneRepo);
+		promises.push(... tags.map((tag) => {
+			return gitClient.push(pathToCloneRepo, destinationRemoteName, tag)
+				.catch((err) => {
+					let msg = `Error pushing tag ${tag} of ${project.name}: ${err.message}`;
+					console.warn(msg);
+				});
+		}));
 		return Promise.all(promises)
 			.then(() => fs.rmdirSync(path.join(process.cwd(), '/tmp', 'migrate', project.name), {recursive: true}));
 	};
