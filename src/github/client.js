@@ -155,12 +155,7 @@ function GithubClient(url, username, privateToken) {
 			})
 			.catch((error) => {
 				console.error(error);
-				if (error.response.status === 422) {
-					throw new WebhookError(error.response.status, `Webhook already exists for repo ${repoName}`);
-				} else {
-					console.error(error);
-					throw new Error(`Error creating webhook for repo ${repoName}: ${error}`);
-				}
+				throw new Error(`Error creating webhook for repo ${repoName}: ${error}`);
 			});
 	};
 

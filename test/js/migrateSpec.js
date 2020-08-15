@@ -559,7 +559,7 @@ describe('migrate', function() {
 	});
 
 	describe('create github webhooks', function () {
-		it('should extract secret and create webhook', async() => {
+		it('should create webhook', async() => {
 			//given
 			const repoName = 'some-repo';
 			const secret = 'webhook-secret';
@@ -607,7 +607,7 @@ describe('migrate', function() {
 				Error, `Error creating webhook for repo ${repoName}: ${error}`
 			);
 		});
-	
+
 		let _getWebhooksPayloadFor = function (events, payloadUrl, secret) {
 			return {
 				'events': events,

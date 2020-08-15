@@ -10,7 +10,6 @@ const config = require('config');
 const GithubClient = require('../../../src/github/client.js');
 const Repository = require('../../../src/github/model/repository.js');
 const BranchProtectionRule = require('../../../src/github/model/branchProtectionRule.js');
-const WebhookError = require('../../../src/github/error/webhookError.js');
 const repoDetails = require('../../resources/github/repoDetails.json');
 const updateBranchProtectionResponse = require('../../resources/github/updateBranchProtectionResponse.json');
 const createWebhookResponse = require('../../resources/github/createWebhookResponse.json');
@@ -313,7 +312,7 @@ describe('Github client', function() {
 			expect(res.data.events).to.eql(['pull_request','push']);
 		});
 
-		it('should throw WebhookError when creating a webhook returns 422', async() => {
+		it('should throw error when Github webhook API returns non-200 http status', async() => {
 			//given
 			const repoName = 'test-webhooks';
 			const secret = 'webhooks-secret';
@@ -324,12 +323,12 @@ describe('Github client', function() {
 			];
 			const orgName = 'some-org';
 			api.post(`/repos/${orgName}/${repoName}/hooks`).reply(422, createWebhookResponse);
-			
+
 			//when
 			//then
 			return assert.isRejected(
 				githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName),
-				WebhookError, `Webhook already exists for repo ${repoName}`
+				Error, `Error creating webhook for repo ${repoName}`
 			);
 		});
 	});

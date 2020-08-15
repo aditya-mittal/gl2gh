@@ -5,8 +5,6 @@ const yaml = require('js-yaml');
 const fs   = require('fs');
 
 const Migrate = require('./migrate.js');
-const WebhookError = require('./github/error/webhookError');
-
 
 const migrate = new Migrate();
 const program = new Command();
@@ -69,7 +67,7 @@ program
 	.requiredOption('-c, --config <type>', 'Config for webhook creation on github', readYamlFile)
 	.description('extracts the secret for the repo name and creates webhook for the repo')
 	.action(async (githubOrgName, repoName, cmdObj) => {
-		createWebhook(githubOrgName, repoName, cmdObj.config[repoName]);
+		await createWebhook(githubOrgName, repoName, cmdObj.config[repoName]);
 	});
 
 program.parse(process.argv);
@@ -86,11 +84,7 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 async function createWebhook(orgName, repoName, webhookConfig) {
 	try {
 		const response = await migrate.createWebhook(webhookConfig.secret, webhookConfig.events, webhookConfig.payloadUrl, orgName, repoName);
-		if (response instanceof WebhookError) {
-			console.info(`Webhook already exists for repo ${repoName}`);
-		} else {
-			console.info(`Created webhook for repo ${repoName} with id: ${response.data.id}`);
-		}
+		console.info(`Created webhook for repo ${repoName} with id: ${response.data.id}`);
 		return response;
 	} catch (error) {
 		console.error(error.message);

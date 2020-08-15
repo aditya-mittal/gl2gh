@@ -89,8 +89,7 @@ function Migrate() {
 	};
 
 	this.createWebhook = async function(secret, events, payloadUrl, orgName, repoName) {
-		const response = await githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName);
-		return response;
+		return githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName);
 	};
 
 	var _migrateProjectsToGithub = function(self, projects, githubOrgName) {
