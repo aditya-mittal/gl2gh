@@ -600,7 +600,7 @@ describe('migrate', function() {
 
 	describe('create github webhooks', function () {
 
-		it('should create webhook for a single', async() => {
+		it('should create webhook for a single repo', async() => {
 			//given
 			const repoName = 'some-repo';
 			const secret = 'webhook-secret';
@@ -618,10 +618,76 @@ describe('migrate', function() {
 			).reply(201, createWebhookResponse);
 	
 			//when
-			const res = await migrate.createWebhook(webhookConfig, orgName);
+			const res = await migrate.createWebhook([webhookConfig], orgName);
 	
 			//then
-			expect(res.status).to.equal(201);
+			expect(res[0].status).to.equal(201);
+		});
+
+		it('should create webhook for multiple repos', async() => {
+			//given
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const secret1 = 'webhook-secret-1';
+			const secret2 = 'webhook-secret-2';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			const webhookConfig1 = new WebhookConfig(repoName1, secret1, events, payloadUrl);
+			const webhookConfig2 = new WebhookConfig(repoName2, secret2, events, payloadUrl);
+
+			githubApi.post(
+				`/repos/${orgName}/${repoName1}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret1)
+			).reply(201, createWebhookResponse);
+	
+			githubApi.post(
+				`/repos/${orgName}/${repoName2}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret2)
+			).reply(201, createWebhookResponse);
+
+			//when
+			const res = await migrate.createWebhook([webhookConfig1, webhookConfig2], orgName);
+	
+			//then
+			expect(res[0].status).to.equal(201);
+			expect(res[1].status).to.equal(201);
+		});
+
+		it('should create webhook for other repo(s) when error received for anyone', async() => {
+			//given
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const secret1 = 'webhook-secret-1';
+			const secret2 = 'webhook-secret-2';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const orgName = 'some-org';
+			const webhookConfig1 = new WebhookConfig(repoName1, secret1, events, payloadUrl);
+			const webhookConfig2 = new WebhookConfig(repoName2, secret2, events, payloadUrl);
+
+			githubApi.post(
+				`/repos/${orgName}/${repoName1}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret1)
+			).reply(201, createWebhookResponse);
+	
+			githubApi.post(
+				`/repos/${orgName}/${repoName2}/hooks`,
+				_getWebhooksPayloadFor(events, payloadUrl, secret2)
+			).reply(401);
+
+			//when
+			const res = await migrate.createWebhook([webhookConfig1, webhookConfig2], orgName);
+	
+			//then
+			expect(res[0].status).to.equal(201);
+			assert.isNotOk(res[1]);
 		});
 	
 		it('should throw error while creating webhook', async() => {
@@ -634,7 +700,6 @@ describe('migrate', function() {
 				'pull_request'
 			];
 			const orgName = 'some-org';
-			const error = 'Error: Request failed with status code 500';
 			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
 
 			githubApi.post(
@@ -643,12 +708,10 @@ describe('migrate', function() {
 				.reply(500, createWebhookResponse);
 	
 			//when
-	
+			const res = await migrate.createWebhook([webhookConfig], orgName);
+
 			//then
-			return assert.isRejected(
-				migrate.createWebhook(webhookConfig, orgName),
-				Error, `Error creating webhook for repo ${repoName}: ${error}`
-			);
+			assert.isNotOk(res[0]);
 		});
 
 		let _getWebhooksPayloadFor = function (events, payloadUrl, secret) {

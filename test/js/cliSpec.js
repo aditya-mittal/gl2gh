@@ -302,11 +302,6 @@ describe('Tests for cli', () => {
 	});
 
 	describe('Create webhooks', function () {
-		const createWebhookResponse = require('../resources/github/createWebhookResponse.json');
-		const httpResponse = {
-			status: 200,
-			data: createWebhookResponse
-		};
 		let createWebhookStub;
 		before(() => {
 			migrateStub = sinon.stub(migrate, 'createWebhook');
@@ -316,6 +311,10 @@ describe('Tests for cli', () => {
 		});
 		after(() => {
 			sinon.restore();
+		});
+
+		beforeEach(() => {
+			migrateStub.reset();
 		});
 
 		it('should create webhook for a single repo', async () => {
@@ -331,18 +330,41 @@ describe('Tests for cli', () => {
 			const repoName = 'some-repo';
 			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
 
-			migrateStub.returns(httpResponse);
-
 			//when
 			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
 			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
 
 			//then
-			sinon.assert.calledWith(migrateStub, webhookConfig, orgName);
-			expect(consoleOutput).to.eql(['Created webhook for repo some-repo with id: 224234647']);
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWith(migrateStub, [webhookConfig], orgName);
 		});
 
-		it('should throw error while creating webhook', async () => {
+		it('should create webhook for two repos', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const events = [
+				'push',
+				'pull_request'
+			];
+			const secret1 = 'some-secret-1';
+			const secret2 = 'some-secret-2';
+			const payloadUrl = 'https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const orgName = 'some-org';
+			const repoName1 = 'some-repo-1';
+			const repoName2 = 'some-repo-2';
+			const webhookConfig1 = new WebhookConfig(repoName1, secret1, events, payloadUrl);
+			const webhookConfig2 = new WebhookConfig(repoName2, secret2, events, payloadUrl);
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName1} ${repoName2}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWith(migrateStub, [webhookConfig1, webhookConfig2], orgName);
+		});
+
+		it('should throw error when creating webhook rejects requests', async () => {
 			//given
 			const configFile = 'test/resources/github/webhookTemplate.yml';
 			const events = ['push', 'pull_request'];
@@ -354,14 +376,31 @@ describe('Tests for cli', () => {
 
 			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
 
-			migrateStub.throws(new Error(errorMessage));
+			migrateStub.returns(Promise.reject(new Error(errorMessage)));
 
 			//when
 			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
 			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
 
 			//then
-			sinon.assert.calledWith(migrateStub, webhookConfig, orgName);
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWith(migrateStub, [webhookConfig], orgName);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+
+		it('should throw error when webhook config missing for repo', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const orgName = 'some-org';
+			const repoName = 'some-repo-3';			
+			const errorMessage = 'No config found for some-repo-3';
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.notCalled(migrateStub);
 			expect(consoleError).to.eql([errorMessage]);
 		});
 	});

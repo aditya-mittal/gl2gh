@@ -64,11 +64,19 @@ program
 	});
 
 program
-	.command('create-webhook <github-org-name> <repo-name>')
+	.command('create-webhook <github-org-name> <repo-name...>')
 	.requiredOption('-c, --config <type>', 'Config for webhook creation on github', readYamlFile)
 	.description('extracts the secret for the repo name and creates webhook for the repo')
-	.action(async (githubOrgName, repoName, cmdObj) => {
-		await createWebhook(githubOrgName, repoName, cmdObj.config[repoName]);
+	.action(async (githubOrgName, repoNames, cmdObj) => {
+		const webhookConfigs = repoNames.map((repoName) => {
+			const configForRepo = cmdObj.config[repoName];
+			if(configForRepo) {
+				return new WebhookConfig(repoName, configForRepo.secret, configForRepo.events, configForRepo.payloadUrl);
+			}
+			console.error(`No config found for ${repoName}`);
+			throw Error(`No config found for ${repoName}`);
+		});
+		await createWebhook(githubOrgName, webhookConfigs);
 	});
 
 program.parse(process.argv);
@@ -82,15 +90,9 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 	}
 }
 
-async function createWebhook(orgName, repoName, cliWebhookConfig) {
-	try {
-		const webhookConfig = new WebhookConfig(repoName, cliWebhookConfig.secret, cliWebhookConfig.events, cliWebhookConfig.payloadUrl);
-		const response = await migrate.createWebhook(webhookConfig, orgName);
-		console.info(`Created webhook for repo ${repoName} with id: ${response.data.id}`);
-		return response;
-	} catch (error) {
-		console.error(error.message);
-	}
+async function createWebhook(orgName, webhookConfigs) {
+	await migrate.createWebhook(webhookConfigs, orgName)
+		.catch((err) => console.error(err.message));
 }
 
 function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType) {
