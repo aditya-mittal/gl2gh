@@ -90,9 +90,7 @@ function Migrate() {
 
 	this.createWebhook = async function(webhookConfigs, orgName) {
 		return Promise.all(webhookConfigs.map((webhookConfig) => {
-			return githubClient.createWebhook(webhookConfig.repoName,
-				webhookConfig.secret, webhookConfig.events, 
-				webhookConfig.payloadUrl, orgName)
+			return githubClient.createWebhook(webhookConfig, orgName)
 				.catch((error) => {
 					console.error(error.message);
 				});

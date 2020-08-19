@@ -10,6 +10,7 @@ const config = require('config');
 const GithubClient = require('../../../src/github/client.js');
 const Repository = require('../../../src/github/model/repository.js');
 const BranchProtectionRule = require('../../../src/github/model/branchProtectionRule.js');
+const WebhookConfig = require('../../../src/github/model/webhookConfig.js')
 const repoDetails = require('../../resources/github/repoDetails.json');
 const updateBranchProtectionResponse = require('../../resources/github/updateBranchProtectionResponse.json');
 const createWebhookResponse = require('../../resources/github/createWebhookResponse.json');
@@ -302,10 +303,11 @@ describe('Github client', function() {
 				'pull_request'
 			];
 			const orgName = 'some-org';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
 			api.post(`/repos/${orgName}/${repoName}/hooks`).reply(201, createWebhookResponse);
 		
 			//when
-			const res = await githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName);
+			const res = await githubClient.createWebhook(webhookConfig, orgName);
 		
 			//then
 			expect(res.status).to.equal(201);
@@ -322,12 +324,13 @@ describe('Github client', function() {
 				'pull_request'
 			];
 			const orgName = 'some-org';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
 			api.post(`/repos/${orgName}/${repoName}/hooks`).reply(422, createWebhookResponse);
 
 			//when
 			//then
 			return assert.isRejected(
-				githubClient.createWebhook(repoName, secret, events, payloadUrl, orgName),
+				githubClient.createWebhook(webhookConfig, orgName),
 				Error, `Error creating webhook for repo ${repoName}`
 			);
 		});

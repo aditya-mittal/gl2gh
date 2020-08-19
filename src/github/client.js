@@ -133,15 +133,15 @@ function GithubClient(url, username, privateToken) {
 			});
 	};
 
-	this.createWebhook = function (repoName, secret, events, payloadUrl, orgName) {
-		let path = `repos/${orgName}/${repoName}/hooks`;
+	this.createWebhook = function (webhookConfig, orgName) {
+		let path = `repos/${orgName}/${webhookConfig.repoName}/hooks`;
 		const data = {
-			'events': events,
+			'events': webhookConfig.events,
 			'config': {
-				'url': payloadUrl,
+				'url': webhookConfig.payloadUrl,
 				'content_type': 'json',
 				'insecure_ssl': '0',
-				'secret': secret
+				'secret': webhookConfig.secret
 			}
 		};
 
@@ -149,12 +149,12 @@ function GithubClient(url, username, privateToken) {
 		params.data = data;
 		return axios(params)
 			.then(response => {
-				console.info('Created webhook for %s', repoName);
+				console.info('Created webhook for %s', webhookConfig.repoName);
 				return response;
 			})
 			.catch((error) => {
 				console.error(error);
-				throw new Error(`Error creating webhook for repo ${repoName}: ${error}`);
+				throw new Error(`Error creating webhook for repo ${webhookConfig.repoName}: ${error}`);
 			});
 	};
 
