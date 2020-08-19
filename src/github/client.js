@@ -134,8 +134,8 @@ function GithubClient(url, username, privateToken) {
 	};
 
 	this.createWebhook = function (repoName, secret, events, payloadUrl, orgName) {
-		var path = `repos/${orgName}/${repoName}/hooks`;
-		var data = {
+		let path = `repos/${orgName}/${repoName}/hooks`;
+		const data = {
 			'events': events,
 			'config': {
 				'url': payloadUrl,
@@ -145,7 +145,7 @@ function GithubClient(url, username, privateToken) {
 			}
 		};
 
-		var params = this._getParams('POST', path);
+		const params = this._getParams('POST', path);
 		params.data = data;
 		return axios(params)
 			.then(response => {
