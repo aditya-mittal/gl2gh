@@ -403,5 +403,56 @@ describe('Tests for cli', () => {
 			sinon.assert.notCalled(migrateStub);
 			expect(consoleError).to.eql([errorMessage]);
 		});
+
+		it('should pick payloadUrl, events config from common when that webhook config missing for repo', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplate.yml';
+			const orgName = 'some-org';
+			const repoName = 'some-repo-4';
+			const events = ['push_1', 'pull_request_1'];
+			const secret = 'some-secret-4';
+			const payloadUrl = 'https://other-github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/';
+			const webhookConfig = new WebhookConfig(repoName, secret, events, payloadUrl);
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.callCount(migrateStub, 1);
+			sinon.assert.calledWith(migrateStub, [webhookConfig], orgName);
+		});
+
+		it('should throw error when events config cannot be found from either common or repo webhook config', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplateWithoutEvents.yml';
+			const orgName = 'some-org';
+			const repoName = 'some-repo-4';
+			const errorMessage = 'No events found for some-repo-4';
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.notCalled(migrateStub);
+			expect(consoleError).to.eql([errorMessage]);
+		});
+
+		it('should throw error when payloadUrl config cannot be found from either common or repo webhook config', async () => {
+			//given
+			const configFile = 'test/resources/github/webhookTemplateWithoutPayloadUrl.yml';
+			const orgName = 'some-org';
+			const repoName = 'some-repo-4';
+			const errorMessage = 'No payloadUrl found for some-repo-4';
+
+			//when
+			process.argv = `node ../../src/cli.js create-webhook -c ${configFile} ${orgName} ${repoName}`.split(' ');
+			await proxyquire('../../src/cli.js', { './migrate': createWebhookStub });
+
+			//then
+			sinon.assert.notCalled(migrateStub);
+			expect(consoleError).to.eql([errorMessage]);
+		});
 	});
 });

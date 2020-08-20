@@ -1,3 +1,8 @@
+events:
+  - push_1
+  - pull_request_1
+payloadUrl: https://other-github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/
+
 some-repo:
   secret: some-secret
   events:
@@ -18,3 +23,6 @@ some-repo-2:
         - push
         - pull_request
       payloadUrl: https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/
+
+some-repo-4:
+      secret: some-secret-4

@@ -68,14 +68,7 @@ program
 	.requiredOption('-c, --config <type>', 'Config for webhook creation on github', readYamlFile)
 	.description('extracts the secret for the repo name and creates webhook for the repo')
 	.action(async (githubOrgName, repoNames, cmdObj) => {
-		const webhookConfigs = repoNames.map((repoName) => {
-			const configForRepo = cmdObj.config[repoName];
-			if(configForRepo) {
-				return new WebhookConfig(repoName, configForRepo.secret, configForRepo.events, configForRepo.payloadUrl);
-			}
-			console.error(`No config found for ${repoName}`);
-			throw Error(`No config found for ${repoName}`);
-		});
+		const webhookConfigs = repoNames.map((repoName) => getWebhookConfig(cmdObj.config, repoName));
 		await createWebhook(githubOrgName, webhookConfigs);
 	});
 
@@ -109,4 +102,24 @@ function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType)
 
 function readYamlFile(yamlFile) {
 	return yaml.safeLoad(fs.readFileSync(yamlFile, 'utf8'));
+}
+
+function getWebhookConfig(config, repoName) {
+	const configForRepo = config[repoName];
+	if(configForRepo && configForRepo.secret) {
+		const events = configForRepo.events 
+					|| config['events'] 
+					|| throwError(`No events found for ${repoName}`);
+		const payloadUrl = configForRepo.payloadUrl 
+					|| config['payloadUrl'] 
+					|| throwError(`No payloadUrl found for ${repoName}`);
+		return new WebhookConfig(repoName, configForRepo.secret, events, payloadUrl);
+	}
+	console.error(`No config found for ${repoName}`);
+	throw Error(`No config found for ${repoName}`);
+}
+
+function throwError(errorMessage) {
+	console.error(errorMessage);
+	throw Error(errorMessage);
 }
