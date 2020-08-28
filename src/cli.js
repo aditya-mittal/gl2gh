@@ -5,6 +5,7 @@ const yaml = require('js-yaml');
 const fs   = require('fs');
 
 const Migrate = require('./migrate.js');
+const WebhookConfig = require('./github/model/webhookConfig.js');
 
 const migrate = new Migrate();
 const program = new Command();
@@ -62,6 +63,15 @@ program
 			.catch((err) => console.error(err.message));
 	});
 
+program
+	.command('create-webhook <github-org-name> <repo-name...>')
+	.requiredOption('-c, --config <type>', 'Config for webhook creation on github', readYamlFile)
+	.description('extracts the secret for the repo name and creates webhook for the repo')
+	.action(async (githubOrgName, repoNames, cmdObj) => {
+		const webhookConfigs = repoNames.map((repoName) => getWebhookConfig(cmdObj.config, repoName));
+		await createWebhook(githubOrgName, webhookConfigs);
+	});
+
 program.parse(process.argv);
 
 async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter, outputType) {
@@ -71,6 +81,11 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 	} catch(error) {
 		console.error(error.message);
 	}
+}
+
+async function createWebhook(orgName, webhookConfigs) {
+	await migrate.createWebhook(webhookConfigs, orgName)
+		.catch((err) => console.error(err.message));
 }
 
 function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType) {
@@ -87,4 +102,24 @@ function printProjectsOnConsole(projects, numberOfProjectsPerResult, outputType)
 
 function readYamlFile(yamlFile) {
 	return yaml.safeLoad(fs.readFileSync(yamlFile, 'utf8'));
+}
+
+function getWebhookConfig(config, repoName) {
+	const configForRepo = config[repoName];
+	if(configForRepo && configForRepo.secret) {
+		const events = configForRepo.events 
+					|| config['events'] 
+					|| throwError(`No events found for ${repoName}`);
+		const payloadUrl = configForRepo.payloadUrl 
+					|| config['payloadUrl'] 
+					|| throwError(`No payloadUrl found for ${repoName}`);
+		return new WebhookConfig(repoName, configForRepo.secret, events, payloadUrl);
+	}
+	console.error(`No config found for ${repoName}`);
+	throw Error(`No config found for ${repoName}`);
+}
+
+function throwError(errorMessage) {
+	console.error(errorMessage);
+	throw Error(errorMessage);
 }

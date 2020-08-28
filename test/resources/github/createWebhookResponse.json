@@ -1,0 +1,19 @@
+{
+    "type": "Repository",
+    "id": 224234647,
+    "name": "web",
+    "active": true,
+    "events": [ "pull_request", "push" ],
+    "config": {
+      "content_type": "json",
+      "insecure_ssl": "0",
+      "secret": "********",
+      "url": "https://some-github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/"
+    },
+    "updated_at": "2020-06-16T10:14:58Z",
+    "created_at": "2020-06-16T10:14:58Z",
+    "url": "https://api.github.com/repos/some-org/some-repo/hooks/224234647",
+    "test_url": "https://api.github.com/repos/some-org/some-repo/hooks/224234647/test",
+    "ping_url": "https://api.github.com/repos/some-org/some-repo/hooks/224234647/pings",
+    "last_response": { "code": null, "status": "unused", "message": null }
+  }

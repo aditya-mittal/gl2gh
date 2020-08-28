@@ -1,0 +1,6 @@
+events:
+  - push_1
+  - pull_request_1
+
+some-repo-4:
+  secret: some-secret-4

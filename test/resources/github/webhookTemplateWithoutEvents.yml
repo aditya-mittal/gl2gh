@@ -1,0 +1,4 @@
+payloadUrl: https://github-webhook-proxy/webhook?targetUrl=https://jenkins.some-jenkins.com/github-webhook/
+
+some-repo-4:
+      secret: some-secret-4

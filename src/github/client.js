@@ -133,6 +133,31 @@ function GithubClient(url, username, privateToken) {
 			});
 	};
 
+	this.createWebhook = function (webhookConfig, orgName) {
+		let path = `repos/${orgName}/${webhookConfig.repoName}/hooks`;
+		const data = {
+			'events': webhookConfig.events,
+			'config': {
+				'url': webhookConfig.payloadUrl,
+				'content_type': 'json',
+				'insecure_ssl': '0',
+				'secret': webhookConfig.secret
+			}
+		};
+
+		const params = this._getParams('POST', path);
+		params.data = data;
+		return axios(params)
+			.then(response => {
+				console.info('Created webhook for %s', webhookConfig.repoName);
+				return response;
+			})
+			.catch((error) => {
+				console.error(error);
+				throw new Error(`Error creating webhook for repo ${webhookConfig.repoName}: ${error}`);
+			});
+	};
+
 	this._getParams = function (method, path) {
 		return {
 			url: `https://${this.url}/${path}`,
