@@ -1,6 +1,8 @@
+const logger = require('log4js').configure('./config/log4js.json').getLogger('BranchProtectionRule');
+
 function BranchProtectionRule(rules) {
 	if(rules === null || rules === undefined) {
-		console.warn('Branch Protection Rule missing, would adapt to default values');
+		logger.warn('Branch Protection Rule missing, would adapt to default values');
 		rules = {};
 	}
 	//TODO: validate - like approve count should be between 1 and 6 etc

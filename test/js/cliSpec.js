@@ -6,25 +6,33 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
+const mock = require('mock-require');
 
 describe('Tests for cli', () => {
 	const migrate = new Migrate();
 	let migrateStub;
-	const originalLog = console.info;
-	const originalErrorConsole = console.error;
 	let consoleOutput = [];
 	let consoleError = [];
 	const mockedLog = output => consoleOutput.push(output);
 	const mockedErrorLog = error => consoleError.push(error);
+	let logger = {};
 	beforeEach(() => {
-		console.info = mockedLog;
-		console.error = mockedErrorLog;
+		logger.info = mockedLog;
+		logger.error = mockedErrorLog;
+		mock('log4js', {
+			configure: function(file) {
+				console.log(`configure called with ${file}`);
+				return this;
+			},
+			getLogger: function(){
+				return logger;
+			}
+		});
 	});
 	afterEach(() => {
 		consoleOutput = [];
 		consoleError = [];
-		console.info = originalLog;
-		console.error = originalErrorConsole;
+		mock.stopAll();
 	});
 	describe('List all repositories for a specific group in order', function () {
 		let getListOfAllProjectsToMigrateStub;

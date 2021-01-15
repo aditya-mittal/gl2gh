@@ -1,5 +1,6 @@
 const axios = require('axios').default;
 const Repository = require('./model/repository.js');
+const logger = require('log4js').configure('./config/log4js.json').getLogger('GithubClient');
 
 function GithubClient(url, username, privateToken) {
 	this.url = url;
@@ -30,13 +31,13 @@ function GithubClient(url, username, privateToken) {
 			})
 			.catch((error) => {
 				if(error.response === undefined) {
-					console.error(error);
+					logger.error(error);
 					throw new Error(`Unable to create repo: ${repoName}`);
 				} else if(error.response.status === 422) {
-					console.warn(`Repository already exists with name: ${repoName}`);
+					logger.warn(`Repository already exists with name: ${repoName}`);
 					return this.getRepo(owner, repoName);
 				} else {
-					console.error(`Unable to create repo: ${repoName}, error: ${error.message}`);
+					logger.error(`Unable to create repo: ${repoName}, error: ${error.message}`);
 					throw new Error(`Unable to create repo: ${repoName}, error: ${error.message}`);
 				}
 			});
@@ -55,13 +56,13 @@ function GithubClient(url, username, privateToken) {
 				return new Repository(response.data.name, response.data.clone_url,
 					response.data.delete_branch_on_merge, response.data.default_branch);
 			}).catch((error) => {
-				console.error(error);
+				logger.error(error);
 				throw new Error(`Unable to get repo with name ${repoName}`);
 			});
 	};
 
 	this.configureBranchProtectionRule = function (owner, repoName, branchName, rules) {
-		console.info('Configuring branch protection rule on %s', repoName);
+		logger.info('Configuring branch protection rule on %s', repoName);
 		const path = `repos/${owner}/${repoName}/branches/${branchName}/protection`;
 		const data = {
 			'required_status_checks': {
@@ -79,37 +80,37 @@ function GithubClient(url, username, privateToken) {
 		params.data = data;
 		// Using a custom media header for Accept. For details, check here https://developer.github.com/changes/2018-03-16-protected-branches-required-approving-reviews/
 		params.headers.Accept = 'application/vnd.github.luke-cage-preview+json';
-		console.debug(`Path : ${path}`);
-		console.debug(`Request Data : ${JSON.stringify(params)}`);
+		logger.debug(`Path : ${path}`);
+		logger.debug(`Request Data : ${JSON.stringify(params)}`);
 
 		return axios(params)
 			.then(response => {
-				console.debug('Configured branch protection rule on %s', repoName);
+				logger.debug('Configured branch protection rule on %s', repoName);
 				return response;
 			})
 			.catch((error) => {
-				console.error('Error configuring branch protection rule on %s of %s: %s', branchName, repoName, error.message);
+				logger.error('Error configuring branch protection rule on %s of %s: %s', branchName, repoName, error.message);
 				throw new Error(`Error configuring branch protection rule on ${branchName} of ${repoName}`);
 			});
 	};
 
 	this.updateAutoDeleteHeadBranches = function (owner, repoName) {
-		console.info('Configuring auto delete head branches on merge on %s', repoName);
+		logger.info('Configuring auto delete head branches on merge on %s', repoName);
 		const path = `repos/${owner}/${repoName}`;
 		const data = {
 			'delete_branch_on_merge': true
 		};
 		let params = this._getParams('PATCH', path);
 		params.data = data;
-		console.debug(`Path : ${path}`);
-		console.debug(`Request Data : ${JSON.stringify(params)}`);
+		logger.debug(`Path : ${path}`);
+		logger.debug(`Request Data : ${JSON.stringify(params)}`);
 
 		return axios(params)
 			.then(response => {
 				return new Repository(response.data.name, response.data.clone_url,
 					response.data.delete_branch_on_merge, response.data.default_branch);
 			}).catch((error) => {
-				console.error('Error updating auto delete head branches on %s: %s', repoName, error.message);
+				logger.error('Error updating auto delete head branches on %s: %s', repoName, error.message);
 				throw new Error(`Unable to update auto delete head branches on ${repoName}`);
 			});
 	};
@@ -124,11 +125,11 @@ function GithubClient(url, username, privateToken) {
 
 		return axios(params)
 			.then(response => {
-				console.info(`Default branch set to ${defaultBranchName}`);
+				logger.info(`Default branch set to ${defaultBranchName}`);
 				return new Repository(response.data.name, response.data.clone_url,
 					response.data.delete_branch_on_merge, response.data.default_branch);
 			}).catch((error) => {
-				console.error(error);
+				logger.error(error);
 				throw new Error(`Unable to set default branch to ${defaultBranchName} for ${repoName}`);
 			});
 	};
@@ -149,11 +150,11 @@ function GithubClient(url, username, privateToken) {
 		params.data = data;
 		return axios(params)
 			.then(response => {
-				console.info('Created webhook for %s', webhookConfig.repoName);
+				logger.info('Created webhook for %s', webhookConfig.repoName);
 				return response;
 			})
 			.catch((error) => {
-				console.error(error);
+				logger.error(error);
 				throw new Error(`Error creating webhook for repo ${webhookConfig.repoName}: ${error}`);
 			});
 	};

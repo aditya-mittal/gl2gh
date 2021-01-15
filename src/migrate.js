@@ -8,6 +8,7 @@ const GithubClient = require('./github/client.js');
 const GithubWebhookService = require('./github/webhookService.js');
 const GitClient = require('./gitClient.js');
 const GithubBranchProtectionRule = require('./github/model/branchProtectionRule.js');
+const logger = require('log4js').configure('./config/log4js.json').getLogger('GitlabClient');
 
 function Migrate() {
 	const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
@@ -33,7 +34,7 @@ function Migrate() {
 			await _copyContentForProjects(this, projects, githubOrgName);
 			return 0;
 		} catch (error) {
-			console.error(error);
+			logger.error(error);
 			return 1;
 		}
 	};
@@ -48,7 +49,7 @@ function Migrate() {
 			projects = _filterProjectsWithPrefix(projects, projectNameFilter);
 			return projects;
 		} catch (error) {
-			console.error(error);
+			logger.error(error);
 			throw error;
 		}
 	};
@@ -57,7 +58,7 @@ function Migrate() {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.configureBranchProtectionRule(owner, repoName, branchName, new GithubBranchProtectionRule(rules))
 				.catch((error) => {
-					console.error(error.message);
+					logger.error(error.message);
 				});
 		}));
 	};
@@ -66,7 +67,7 @@ function Migrate() {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.updateAutoDeleteHeadBranches(owner, repoName)
 				.catch((error) => {
-					console.error(error.message);
+					logger.error(error.message);
 				});
 		}));
 	};
@@ -75,7 +76,7 @@ function Migrate() {
 		return Promise.all(repoNames.map((repoName) => {
 			return githubClient.updateDefaultBranch(owner, repoName, branchName)
 				.catch((error) => {
-					console.error(error.message);
+					logger.error(error.message);
 				});
 		}));
 	};
@@ -84,7 +85,7 @@ function Migrate() {
 		return Promise.all(projectPaths.map((projectPath) => {
 			return gitlabClient.archiveProject(projectPath)
 				.catch((error) => {
-					console.error(error.message);
+					logger.error(error.message);
 				});
 		}));
 	};
@@ -94,7 +95,7 @@ function Migrate() {
 		return Promise.all(webhookConfigs.map((webhookConfig) => {
 			return githubClient.createWebhook(webhookConfig, orgName)
 				.catch((error) => {
-					console.error(error.message);
+					logger.error(error.message);
 				});
 		}));
 	};
@@ -112,7 +113,7 @@ function Migrate() {
 		}
 		return await Promise.all(promises)
 			.then(() => self.updateDefaultBranchOnGithub(owner, projects.map(project => project.name), defaultBranchName))
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	};
 
 	var _copyContent = function(project, githubOrgName) {
@@ -155,7 +156,7 @@ function Migrate() {
 			return gitClient.push(pathToCloneRepo, destinationRemoteName, branch)
 				.catch((err) => {
 					let msg = `Error pushing branch ${branch} of ${project.name}: ${err.message}`;
-					console.warn(msg);
+					logger.warn(msg);
 				});
 		});
 		const tags = await gitClient.listTags(pathToCloneRepo);
@@ -163,7 +164,7 @@ function Migrate() {
 			return gitClient.push(pathToCloneRepo, destinationRemoteName, tag)
 				.catch((err) => {
 					let msg = `Error pushing tag ${tag} of ${project.name}: ${err.message}`;
-					console.warn(msg);
+					logger.warn(msg);
 				});
 		}));
 		return Promise.all(promises)

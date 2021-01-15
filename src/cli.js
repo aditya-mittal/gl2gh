@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const logger = require('log4js').configure('./config/log4js.json').getLogger('cli');
 
 const { Command } = require('commander');
 const yaml = require('js-yaml');
@@ -26,7 +27,7 @@ program.command('copy-content <gitlab-group-name>')
 	.option('--starts-with <prefix>', 'Filter projects starting with specified prefix', '')
 	.action( async (gitlabGroupName, cmdObj) => {
 		await migrate.copyContentFromGitlabToGithub(gitlabGroupName, cmdObj.githubOrg, cmdObj.startsWith)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program
@@ -35,7 +36,7 @@ program
 	.option('-c, --config <branch_protection_config>', 'Config for branch protection rule on github', readYamlFile, readYamlFile('./config/templates/branchProtectionRuleTemplate.yml'))
 	.action(async (owner, branchName, repoNames, cmdObj) => {
 		await migrate.configureGithubBranchProtectionRule(owner, repoNames, branchName, cmdObj.config.branchProtectionRule)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program
@@ -43,7 +44,7 @@ program
 	.description('Enables the setting to automatically delete head branches after pull requests are merged on the GitHub repo')
 	.action(async (owner, repoNames) => {
 		await migrate.updateAutoDeleteHeadBranchesOnGithub(owner, repoNames)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program
@@ -51,7 +52,7 @@ program
 	.description('Sets the default branch on GitHub')
 	.action(async (owner, branchName, repoNames) => {
 		await migrate.updateDefaultBranchOnGithub(owner, repoNames, branchName)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program
@@ -59,7 +60,7 @@ program
 	.description('Archive project(s) on GitLab')
 	.action(async (projectPaths) => {
 		await migrate.archiveGitlabProject(projectPaths)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program
@@ -78,7 +79,7 @@ async function listProjects(gitlabGroupName, numberOfProjects, projectNameFilter
 		let projects = await migrate.getListOfAllProjectsToMigrate(gitlabGroupName, projectNameFilter);
 		printProjectsOnConsole(projects, numberOfProjects, outputType);
 	} catch(error) {
-		console.error(error.message);
+		logger.error(error.message);
 	}
 }
 
