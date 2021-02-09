@@ -95,15 +95,15 @@ $ gl2h set-default-branch my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2
 ### Archive project on GitLab
 
 ```bash
-$ gl2h create-webhook my-foo-org my-project-path-1
-$ gl2h create-webhook my-project-path-1 my-project-path-1 my-project-path-2 ...  
+$ gl2h archive-repo my-foo-org my-project-path-1
+$ gl2h archive-repo my-project-path-1 my-project-path-1 my-project-path-2 ...  
 ```
 
 ### Create webhook on Github
 
 ```bash
-$ gl2h archive-repo -c /path/to/my/webhookTemplate.yml my-project-path
-$ gl2h archive-repo -c /path/to/my/webhookTemplate.yml my-project-path-1 my-project-path-2 ...  
+$ gl2h create-webhook -c /path/to/my/webhookTemplate.yml my-project-path
+$ gl2h create-webhook -c /path/to/my/webhookTemplate.yml my-project-path-1 my-project-path-2 ...  
 ```
 
 ### Clean up
