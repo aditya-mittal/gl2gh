@@ -95,7 +95,7 @@ $ gl2h set-default-branch my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2
 ### Archive project on GitLab
 
 ```bash
-$ gl2h archive-repo my-foo-org my-project-path-1
+$ gl2h archive-repo my-project-path-1
 $ gl2h archive-repo my-project-path-1 my-project-path-1 my-project-path-2 ...  
 ```
 
