@@ -6,6 +6,7 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
+const WebhookConfig = require('../../src/github/model/webhookConfig.js');
 const mock = require('mock-require');
 
 describe('Tests for cli', () => {
@@ -19,9 +20,8 @@ describe('Tests for cli', () => {
 	beforeEach(() => {
 		logger.info = mockedLog;
 		logger.error = mockedErrorLog;
-		mock('log4js', {
-			configure: function(file) {
-				console.log(`configure called with ${file}`);
+		mock('log4js', { 
+			configure: function() {
 				return this;
 			},
 			getLogger: function(){
