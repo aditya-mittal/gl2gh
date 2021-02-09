@@ -10,7 +10,7 @@ const config = require('config');
 
 const GitClient = require('../../src/gitClient.js');
 
-describe('Git', function() {
+describe.skip('Git', function() {
 	const gitClient = new GitClient(config.get('gl2gh.gitlab.username'), config.get('gl2gh.gitlab.token'), config.get('gl2gh.github.token'));
 	describe('Clone', function() {
 		let cloneStub;

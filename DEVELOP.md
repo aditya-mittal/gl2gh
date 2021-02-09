@@ -32,8 +32,3 @@ $ npm run test-watch
 ```bash
 $ npm run test-jenkins
 ```
-
-### Run the program
-```bash
-$ npm start
-```
