@@ -96,7 +96,7 @@ $ gl2h set-default-branch my-foo-org my-foo-branch my-bar-repo-1 my-bar-repo-2
 
 ```bash
 $ gl2h archive-repo my-project-path
-$ gl2h archive-repo my-project-path-1 my-project-path-1 my-project-path-2 ...  
+$ gl2h archive-repo my-project-path-1 my-project-path-2 ...  
 ```
 
 ### Create webhook on Github
