@@ -6,3 +6,4 @@ config/default.yml
 **.DS_Store
 .nyc_output
 coverage
+log

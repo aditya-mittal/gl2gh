@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-const logger = require('log4js').configure('./config/log4js.json').getLogger('cli');
 
 const { Command } = require('commander');
 const yaml = require('js-yaml');
 const fs   = require('fs');
 
 const Migrate = require('./migrate.js');
+
+const log4js = require('log4js').configure('./config/log4js.json');
+const logger = log4js.getLogger('cli');
 
 const migrate = new Migrate();
 const program = new Command();
