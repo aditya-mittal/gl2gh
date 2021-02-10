@@ -8,7 +8,7 @@ const proxyquire =  require('proxyquire');
 const Migrate = require('../../src/migrate.js');
 const WebhookConfig = require('../../src/github/model/webhookConfig.js');
 
-describe.skip('Tests for cli', () => {
+describe('Tests for cli', () => {
 	const migrate = new Migrate();
 	let migrateStub;
 	const originalLog = console.info;
