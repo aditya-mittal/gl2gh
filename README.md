@@ -54,6 +54,26 @@ $ gl2gh list -n 10 my-foo-group # n is defaulted to 50
 $ gl2gh list --output text my-foo-group # output is defaulted to json
 ```
 
+### Migrate from GitLab to GitHub
+
+```bash
+# migrate to specific organisation under github
+$ gl2gh migrate my-foo-group --github-org my-bar-org
+
+# migrate to user root on github
+$ gl2gh migrate my-foo-group
+
+# migrate only matching projects
+$ gl2gh migrate --starts-with my-foo-repo my-foo-group --github-org my-bar-org
+
+# By default migrate will only copy content of repos.
+# If you want anymore things then include specific operation(s) (e.g. include archiving project on GitLab)
+$ gl2gh migrate --archive-repo my-foo-group --github-org my-bar-org
+
+# include protecting branch on Github
+$ gl2gh migrate --protect-branch my-foo-group --github-org my-bar-org --branch-name my-foo-branch
+```
+
 ### Copy content from GitLab to GitHub
 
 ```bash
