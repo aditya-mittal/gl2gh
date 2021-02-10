@@ -5,6 +5,7 @@ const config = require('config');
 
 const GitlabClient = require('./gitlab/client.js');
 const GithubClient = require('./github/client.js');
+const GithubWebhookService = require('./github/webhookService.js');
 const GitClient = require('./gitClient.js');
 const GithubBranchProtectionRule = require('./github/model/branchProtectionRule.js');
 
@@ -88,7 +89,8 @@ function Migrate() {
 		}));
 	};
 
-	this.createWebhook = async function(webhookConfigs, orgName) {
+	this.createWebhook = function(config, orgName, repoNames) {
+		const webhookConfigs = GithubWebhookService.getWebhookConfig(config, repoNames);
 		return Promise.all(webhookConfigs.map((webhookConfig) => {
 			return githubClient.createWebhook(webhookConfig, orgName)
 				.catch((error) => {
