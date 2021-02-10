@@ -99,6 +99,13 @@ $ gl2h archive-repo my-project-path
 $ gl2h archive-repo my-project-path-1 my-project-path-2 ...  
 ```
 
+### Create webhook on Github
+
+```bash
+$ gl2h create-webhook -c /path/to/my/webhookTemplate.yml my-project-path
+$ gl2h create-webhook -c /path/to/my/webhookTemplate.yml my-project-path-1 my-project-path-2 ...  
+```
+
 ### Clean up
 
 Clean up any installed binary for migration
