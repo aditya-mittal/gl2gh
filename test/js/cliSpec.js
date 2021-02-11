@@ -6,7 +6,6 @@ const fs   = require('fs');
 const proxyquire =  require('proxyquire');
 
 const Migrate = require('../../src/migrate.js');
-const WebhookConfig = require('../../src/github/model/webhookConfig.js');
 const mock = require('mock-require');
 
 describe('Tests for cli', () => {

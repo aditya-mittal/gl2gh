@@ -71,7 +71,7 @@ program
 	.description('extracts the secret for the repo name and creates webhook for the repo')
 	.action(async (githubOrgName, repoNames, cmdObj) => {
 		await migrate.createWebhook(cmdObj.config, githubOrgName, repoNames)
-			.catch((err) => console.error(err.message));
+			.catch((err) => logger.error(err.message));
 	});
 
 program.parse(process.argv);
