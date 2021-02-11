@@ -14,10 +14,10 @@ Migrate one or more projects from GitLab to GitHub.
 ```bash
 # Example current versions, also known to work with earlier versions
 $ node --version
-v14.4.0
+v15.7.0
 
 $ npm --version
-6.14.4
+7.4.3
 ```
 
 ### Installation

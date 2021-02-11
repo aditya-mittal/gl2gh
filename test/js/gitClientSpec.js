@@ -1,6 +1,10 @@
 const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
 const assert = chai.assert;
 const expect = chai.expect;
+const should = require('chai').should();
+
 const sinon = require('sinon');
 const path = require('path');
 const fs = require('fs');
@@ -40,17 +44,17 @@ describe('Git', function() {
 			const repoName = 'some-repo';
 			const pathToCloneRepo = path.join(process.cwd(), '/tmp','migrate', repoName);
 			const remoteName = 'gitlab';
-			const error = new Error('Error occurred while cloning the repo');
-			cloneStub.withArgs({fs, http, pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName}).returns(Promise.reject(error));
-			//when
-			try {
-				await gitClient.clone(httpsRemoteUrl, pathToCloneRepo, remoteName);
-			} catch(err) {
-				//then
-				sinon.assert.calledWith(cloneStub, { fs, http, dir: pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName,
-					onAuth: sinon.match.func, onAuthFailure: sinon.match.func });
-				assert.deepEqual(err, error);
-			}
+			const errorMessage = 'Error occurred while cloning the repo';
+			cloneStub.withArgs({fs, http, dir: pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName,
+				onAuth: sinon.match.func, onAuthFailure: sinon.match.func}).returns(Promise.reject(new Error(errorMessage)));
+			//when & then
+			assert.isRejected(
+				gitClient.clone(httpsRemoteUrl, pathToCloneRepo, remoteName),
+				Error,
+				errorMessage
+			);
+			sinon.assert.calledWith(cloneStub, { fs, http, dir: pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName,
+				onAuth: sinon.match.func, onAuthFailure: sinon.match.func });
 		});
 	});
 	describe('Remote', function() {
@@ -78,16 +82,15 @@ describe('Git', function() {
 			const httpsRemoteUrl = 'https://github.com/new-repo.git';
 			const remoteName = 'new_origin';
 			const repoPathOnLocal = path.join(process.cwd(), 'tmp','migrate', 'some_repo');
-			const error = new Error('Error occurred while adding remote the repo');
-			addRemoteStub.withArgs({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl}).returns(Promise.reject(error));
-			//when
-			try {
-				await gitClient.addRemote(repoPathOnLocal, remoteName, httpsRemoteUrl);
-			} catch(err) {
-				//then
-				assert(git.addRemote.calledWithMatch({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl}));
-				assert.deepEqual(err, error);
-			}
+			const errorMessage = 'Error occurred while adding remote the repo';
+			addRemoteStub.withArgs({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl}).returns(Promise.reject(new Error(errorMessage)));
+			//when & then
+			assert.isRejected(
+				gitClient.addRemote(repoPathOnLocal, remoteName, httpsRemoteUrl),
+				Error,
+				errorMessage
+			);
+			assert(git.addRemote.calledWithMatch({fs, dir: repoPathOnLocal, remote: remoteName, url: httpsRemoteUrl}));
 		});
 	});
 	describe('#push()', function() {
@@ -118,16 +121,17 @@ describe('Git', function() {
 			const remote_name = 'new_origin';
 			const branch_name = 'master';
 			const repo_path_on_local = path.join(process.cwd(), 'tmp','migrate', 'some_repo');
-			const error = new Error('Error occurred while pushing to remote');
-			pushStub.withArgs({fs, http, dir: repo_path_on_local, remote: remote_name, ref: branch_name}).returns(Promise.reject(error));
-			//when
-			try {
-				await gitClient.push(repo_path_on_local, remote_name, branch_name);
-			} catch(err) {
-				//then
-				sinon.assert.calledWith(pushStub, {fs, http, dir: repo_path_on_local, remote: remote_name, ref: branch_name, onAuth: sinon.match.func});
-				assert.deepEqual(err, error);
-			}
+			const errorMessage = 'Error occurred while pushing to remote';
+			pushStub.withArgs({fs, http, dir: repo_path_on_local, remote: remote_name, ref: branch_name,
+				onAuth: sinon.match.func, onAuthFailure: sinon.match.func}).returns(Promise.reject(new Error(errorMessage)));
+			//when & then
+			assert.isRejected(
+				gitClient.push(repo_path_on_local, remote_name, branch_name),
+				Error,
+				errorMessage
+			);
+			sinon.assert.calledWith(pushStub, {fs, http, dir: repo_path_on_local, remote: remote_name, ref: branch_name,
+				onAuth: sinon.match.func, onAuthFailure: sinon.match.func});
 		});
 	});
 	describe('#list', function() {

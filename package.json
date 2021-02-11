@@ -7,7 +7,7 @@
     "gl2gh": "./src/cli.js"
   },
   "scripts": {
-    "start": "node src/main.js",
+    "start": "node src/cli.js",
     "test": "nyc --reporter=lcov --reporter=html --reporter=text mocha --recursive --require test/js/util/mochaHelper.js",
     "coverage": "codecov",
     "lint-fix": "eslint --ignore-path .gitignore --fix .",
