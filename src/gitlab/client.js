@@ -1,6 +1,7 @@
 const axios = require('axios').default;
 const Group = require('./model/group.js');
 const Subgroup = require('./model/subgroup.js');
+const logger = require('log4js').configure('./config/log4js.json').getLogger('GitlabClient');
 
 function GitlabClient(url, privateToken) {
 	this.url = url;
@@ -16,10 +17,10 @@ function GitlabClient(url, privateToken) {
 			})
 			.catch((error) => {
 				if(error.response && error.response.status === 404) {
-					console.error('No GitLab group found with name %s: %s', groupName, error.message);
+					logger.error('No group found with name:', groupName, error.message);
 					throw new Error(`No group found with name ${groupName}`);
 				}
-				console.error('Error while fetching GitLab group %s: %s', groupName, error.message);
+				logger.error('Error while fetching GitLab group %s: %s', groupName, error.message);
 				throw new Error(`Error while fetching GitLab group: ${groupName}`);
 			});
 	};
@@ -33,12 +34,12 @@ function GitlabClient(url, privateToken) {
 				return new Group(response.data);
 			})
 			.catch((error) => {
-				console.error(error);
+				logger.error(error);
 				if(error.response && error.response.status === 404){
-					console.error('No subgroup found with name %s: %s', subgroupName, error.message);
+					logger.error('No subgroup found with name %s: %s', subgroupName, error.message);
 					throw new Error(`No subgroup found with name ${subgroupName}`);
 				}
-				console.error('Error while fetching subgroup %s: %s', subgroupName, error.message);
+				logger.error('Error while fetching subgroup %s: %s', subgroupName, error.message);
 				throw new Error(`Error while fetching subgroup ${subgroupName}`);
 			});
 	};
@@ -57,10 +58,10 @@ function GitlabClient(url, privateToken) {
 			})
 			.catch((error) => {
 				if(error.response && error.response.status === 404){
-					console.error('No group found with name %s, cant fetch subgroups: %s',groupName, error.message);
+					logger.error('No group found with name %s, cant fetch subgroups: %s',groupName, error.message);
 					throw new Error(`No group found with name ${groupName}, cant fetch subgroups`);
 				}
-				console.error('Error while fetching subgroups for GitLab group %s: %s',groupName, error.message);
+				logger.error('Error while fetching subgroups for GitLab group %s: %s',groupName, error.message);
 				throw new Error(`Error while fetching subgroups for GitLab group ${groupName}`);
 			});
 	};
@@ -71,15 +72,15 @@ function GitlabClient(url, privateToken) {
 
 		return axios(params)
 			.then(response => {
-				console.info('Archived project %s with status %s', projectPath, response.status);
+				logger.info('Archived project %s with status %s', projectPath, response.status);
 				return response;
 			})
 			.catch((error) => {
 				if(error.response && error.response.status === 404) {
-					console.error('No project found in the path %s for archiving: %s',projectPath, error.message);
+					logger.error('No project found in the path %s for archiving: %s',projectPath, error.message);
 					throw new Error(`No project found in the path ${projectPath}, for archiving`);
 				}
-				console.error('Error while archiving project %s: %s', projectPath, error.message);
+				logger.error('Error while archiving project %s: %s', projectPath, error.message);
 				throw new Error(`Error while archiving project ${projectPath}`);
 			});
 	};

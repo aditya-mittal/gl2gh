@@ -1,6 +1,7 @@
 const git = require('isomorphic-git');
 const http = require('isomorphic-git/http/node');
 const fs = require('fs');
+const logger = require('log4js').configure('./config/log4js.json').getLogger('GitClient');
 
 function GitClient(gitlabUserName, gitlabToken, githubToken) {
 	this.gitlabUserName = gitlabUserName;
@@ -10,7 +11,7 @@ function GitClient(gitlabUserName, gitlabToken, githubToken) {
 	this.clone = function(httpsRemoteUrl, pathToCloneRepo, remoteName) {
 		return git.clone({ fs, http, dir: pathToCloneRepo, url: httpsRemoteUrl, remote: remoteName,
 			onAuth: () => ({ username: this.gitlabUserName, password: this.gitlabToken }),
-			onAuthFailure: () => {console.error('Cant authenticate with GitLab');}
+			onAuthFailure: () => {logger.error('Cant authenticate with GitLab');}
 		});
 	};
 
@@ -34,7 +35,7 @@ function GitClient(gitlabUserName, gitlabToken, githubToken) {
 	this.push = function(repoPathOnLocal, remoteName, branchName) {
 		return git.push({fs, http, dir: repoPathOnLocal, remote: remoteName,
 			ref: branchName, onAuth: () => ({ username: this.githubToken }),
-			onAuthFailure: () => {console.error('Cant authenticate with GitHub');}
+			onAuthFailure: () => {logger.error('Cant authenticate with GitHub');}
 		});
 	};
 }
