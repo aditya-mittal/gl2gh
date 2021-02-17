@@ -17,7 +17,6 @@ describe('Project', function() {
 		project.should.have.property('description');
 		project.should.have.all.keys('name', 'description', 'http_url_to_repo');
 	});
-
 	it('should check if project starts with specific prefix', function() {
 		//given
 		let name = 'xyz-repository-1';
@@ -34,5 +33,16 @@ describe('Project', function() {
 		doesStartsWithXyz = project.startsWith('xyz');
 		//then
 		expect(doesStartsWithXyz).to.be.false;
+	});
+	it('must return project representation as string', function() {
+		//given
+		const name = 'repository-1';
+		const description = 'some-description';
+		const http_url_to_repo = 'https://gitlab.com/FOO/repository-1.git';
+		const project = new Project(name, description, http_url_to_repo);
+		//when
+		let projectString = project.toString();
+		//then
+		projectString.should.equal(`${name}, ${description}, ${http_url_to_repo}`);
 	});
 });
