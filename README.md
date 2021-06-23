@@ -126,3 +126,7 @@ $ npm run clean
 - Navigate to your [GitLab Personal access tokens](https://gitlab.com/profile/personal_access_tokens)
 - Choose a name and expiry date, and choose scope: `api`
 - Copy the generated token
+
+## License
+
+* The MIT License
