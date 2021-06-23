@@ -127,6 +127,6 @@ $ npm run clean
 - Choose a name and expiry date, and choose scope: `api`
 - Copy the generated token
 
-# License
+## License
 
 * The MIT License
